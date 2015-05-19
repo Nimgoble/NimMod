@@ -153,10 +153,16 @@ public:
 	void LookUpAtRate(float Val);
 
 	/** player pressed start fire action */
-	void OnStartFire();
+	void OnStartPrimaryFire();
 
 	/** player released start fire action */
-	void OnStopFire();
+	void OnStopPrimaryFire();
+
+	/** player pressed start fire action */
+	void OnStartSecondaryFire();
+
+	/** player released start fire action */
+	void OnStopSecondaryFire();
 
 	/** player pressed targeting action */
 	void OnStartTargeting();

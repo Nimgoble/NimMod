@@ -29,6 +29,7 @@ ANimModCharacter::ANimModCharacter(const FObjectInitializer& ObjectInitializer)
 	DefaultBaseEyeHeight = 71.f;
 	BaseEyeHeight = DefaultBaseEyeHeight;
 	CharacterCameraComponent->RelativeLocation = FVector(0, 0, DefaultBaseEyeHeight); // Position the camera
+	CharacterCameraComponent->bUsePawnControlRotation = true;
 
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("PawnMesh1P"));
 	Mesh1P->AttachParent = CharacterCameraComponent;
@@ -43,8 +44,10 @@ ANimModCharacter::ANimModCharacter(const FObjectInitializer& ObjectInitializer)
 	Mesh1P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Mesh1P->SetCollisionResponseToAllChannels(ECR_Ignore);
 
-	GetMesh()->bOnlyOwnerSee = false;
-	GetMesh()->bOwnerNoSee = true;
+	/*GetMesh()->bOnlyOwnerSee = false;
+	GetMesh()->bOwnerNoSee = true;*/
+	GetMesh()->SetOnlyOwnerSee(false);
+	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->bReceivesDecals = false;
 	GetMesh()->SetCollisionObjectType(ECC_Pawn);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -143,7 +146,7 @@ void ANimModCharacter::OnRep_PlayerState()
 
 void ANimModCharacter::BeginPlay()
 {
-	GetMesh()->SetOwnerNoSee(false); // compatibility with old content, we're doing this through UpdateHiddenComponents() now
+	//GetMesh()->SetOwnerNoSee(false); // compatibility with old content, we're doing this through UpdateHiddenComponents() now
 
 	if (GetWorld()->GetNetMode() != NM_DedicatedServer)
 	{
@@ -830,7 +833,9 @@ float ANimModCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float I
 	USkeletalMeshComponent* UseMesh = GetPawnMesh();
 	if (AnimMontage && UseMesh && UseMesh->AnimScriptInstance)
 	{
-		return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+		bool isPlaying = UseMesh->AnimScriptInstance->Montage_IsPlaying(AnimMontage);
+		if (!isPlaying)
+			return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
 	}
 
 	return 0.0f;
@@ -870,8 +875,11 @@ void ANimModCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 	InputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	InputComponent->BindAxis("LookUpRate", this, &ANimModCharacter::LookUpAtRate);
 
-	InputComponent->BindAction("Fire", IE_Pressed, this, &ANimModCharacter::OnStartFire);
-	InputComponent->BindAction("Fire", IE_Released, this, &ANimModCharacter::OnStopFire);
+	InputComponent->BindAction("PrimaryFire", IE_Pressed, this, &ANimModCharacter::OnStartPrimaryFire);
+	InputComponent->BindAction("PrimaryFire", IE_Released, this, &ANimModCharacter::OnStopPrimaryFire);
+
+	InputComponent->BindAction("SecondaryFire", IE_Pressed, this, &ANimModCharacter::OnStartSecondaryFire);
+	InputComponent->BindAction("SecondaryFire", IE_Released, this, &ANimModCharacter::OnStopSecondaryFire);
 
 	InputComponent->BindAction("Targeting", IE_Pressed, this, &ANimModCharacter::OnStartTargeting);
 	InputComponent->BindAction("Targeting", IE_Released, this, &ANimModCharacter::OnStopTargeting);
@@ -938,7 +946,7 @@ void ANimModCharacter::LookUpAtRate(float Val)
 	AddControllerPitchInput(Val * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ANimModCharacter::OnStartFire()
+void ANimModCharacter::OnStartPrimaryFire()
 {
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
 	if (MyPC && MyPC->IsGameInputAllowed())
@@ -951,7 +959,25 @@ void ANimModCharacter::OnStartFire()
 	}
 }
 
-void ANimModCharacter::OnStopFire()
+void ANimModCharacter::OnStopPrimaryFire()
+{
+	StopWeaponFire();
+}
+
+void ANimModCharacter::OnStartSecondaryFire()
+{
+	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	if (MyPC && MyPC->IsGameInputAllowed())
+	{
+		if (IsRunning())
+		{
+			SetRunning(false, false);
+		}
+		StartWeaponFire();
+	}
+}
+
+void ANimModCharacter::OnStopSecondaryFire()
 {
 	StopWeaponFire();
 }

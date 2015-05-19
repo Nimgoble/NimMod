@@ -21,33 +21,33 @@ struct FWeaponData
 {
 	GENERATED_USTRUCT_BODY()
 
-		/** inifite ammo for reloads */
-		UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		bool bInfiniteAmmo;
+	/** inifite ammo for reloads */
+	UPROPERTY(EditDefaultsOnly, Category = Ammo)
+	bool bInfiniteAmmo;
 
 	/** infinite ammo in clip, no reload required */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		bool bInfiniteClip;
+	bool bInfiniteClip;
 
 	/** max ammo */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		int32 MaxAmmo;
+	int32 MaxAmmo;
 
 	/** clip size */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		int32 AmmoPerClip;
+	int32 AmmoPerClip;
 
 	/** initial clips */
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		int32 InitialClips;
+	int32 InitialClips;
 
 	/** time between two consecutive shots */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
-		float TimeBetweenShots;
+	float TimeBetweenShots;
 
 	/** failsafe reload duration if weapon doesn't have any animation for it */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
-		float NoAnimReloadDuration;
+	float NoAnimReloadDuration;
 
 	/** defaults */
 	FWeaponData()
@@ -67,13 +67,17 @@ struct FWeaponAnim
 {
 	GENERATED_USTRUCT_BODY()
 
-		/** animation played on pawn (1st person view) */
-		UPROPERTY(EditDefaultsOnly, Category = Animation)
-		UAnimMontage* Pawn1P;
+	/** animation played on pawn (1st person view) */
+	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UAnimMontage* Pawn1P;
+	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UAnimMontage* Weapon1P;
 
 	/** animation played on pawn (3rd person view) */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
-		UAnimMontage* Pawn3P;
+	UAnimMontage* Pawn3P;
+	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UAnimMontage* Weapon3P;
 };
 
 UCLASS(Abstract, Blueprintable)
@@ -197,55 +201,55 @@ public:
 
 	/** icon displayed on the HUD when weapon is equipped as primary */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon PrimaryIcon;
+	FCanvasIcon PrimaryIcon;
 
 	/** icon displayed on the HUD when weapon is secondary */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon SecondaryIcon;
+	FCanvasIcon SecondaryIcon;
 
 	/** bullet icon used to draw current clip (left side) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon PrimaryClipIcon;
+	FCanvasIcon PrimaryClipIcon;
 
 	/** bullet icon used to draw secondary clip (left side) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon SecondaryClipIcon;
+	FCanvasIcon SecondaryClipIcon;
 
 	/** how many icons to draw per clip */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		float AmmoIconsCount;
+	float AmmoIconsCount;
 
 	/** defines spacing between primary ammo icons (left side) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		int32 PrimaryClipIconOffset;
+	int32 PrimaryClipIconOffset;
 
 	/** defines spacing between secondary ammo icons (left side) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		int32 SecondaryClipIconOffset;
+	int32 SecondaryClipIconOffset;
 
 	/** crosshair parts icons (left, top, right, bottom and center) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon Crosshair[5];
+	FCanvasIcon Crosshair[5];
 
 	/** crosshair parts icons when targeting (left, top, right, bottom and center) */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		FCanvasIcon AimingCrosshair[5];
+	FCanvasIcon AimingCrosshair[5];
 
 	/** only use red colored center part of aiming crosshair */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		bool UseLaserDot;
+	bool UseLaserDot;
 
 	/** false = default crosshair */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		bool UseCustomCrosshair;
+	bool UseCustomCrosshair;
 
 	/** false = use custom one if set, otherwise default crosshair */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		bool UseCustomAimingCrosshair;
+	bool UseCustomAimingCrosshair;
 
 	/** true - crosshair will not be shown unless aiming with the weapon */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
-		bool bHideCrosshairWhileNotAiming;
+	bool bHideCrosshairWhileNotAiming;
 
 	/** check if weapon has infinite ammo (include owner's cheats) */
 	bool HasInfiniteAmmo() const;
@@ -270,93 +274,93 @@ protected:
 
 	/** weapon data */
 	UPROPERTY(EditDefaultsOnly, Category = Config)
-		FWeaponData WeaponConfig;
+	FWeaponData WeaponConfig;
 
 private:
 	/** weapon mesh: 1st person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		USkeletalMeshComponent* Mesh1P;
+	USkeletalMeshComponent* Mesh1P;
 
 	/** weapon mesh: 3rd person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		USkeletalMeshComponent* Mesh3P;
+	USkeletalMeshComponent* Mesh3P;
 protected:
 
 	/** firing audio (bLoopedFireSound set) */
 	UPROPERTY(Transient)
-		UAudioComponent* FireAC;
+	UAudioComponent* FireAC;
 
 	/** name of bone/socket for muzzle in weapon mesh */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		FName MuzzleAttachPoint;
+	FName MuzzleAttachPoint;
 
 	/** FX for muzzle flash */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		UParticleSystem* MuzzleFX;
+	UParticleSystem* MuzzleFX;
 
 	/** spawned component for muzzle FX */
 	UPROPERTY(Transient)
-		UParticleSystemComponent* MuzzlePSC;
+	UParticleSystemComponent* MuzzlePSC;
 
 	/** spawned component for second muzzle FX (Needed for split screen) */
 	UPROPERTY(Transient)
-		UParticleSystemComponent* MuzzlePSCSecondary;
+	UParticleSystemComponent* MuzzlePSCSecondary;
 
 	/** camera shake on firing */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		TSubclassOf<UCameraShake> FireCameraShake;
+	TSubclassOf<UCameraShake> FireCameraShake;
 
 	/** force feedback effect to play when the weapon is fired */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		UForceFeedbackEffect *FireForceFeedback;
+	UForceFeedbackEffect *FireForceFeedback;
 
 	/** single fire sound (bLoopedFireSound not set) */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* FireSound;
+	USoundCue* FireSound;
 
 	/** looped fire sound (bLoopedFireSound set) */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* FireLoopSound;
+	USoundCue* FireLoopSound;
 
 	/** finished burst sound (bLoopedFireSound set) */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* FireFinishSound;
+	USoundCue* FireFinishSound;
 
 	/** out of ammo sound */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* OutOfAmmoSound;
+	USoundCue* OutOfAmmoSound;
 
 	/** reload sound */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* ReloadSound;
+	USoundCue* ReloadSound;
 
 	/** reload animations */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
-		FWeaponAnim ReloadAnim;
+	FWeaponAnim ReloadAnim;
 
 	/** equip sound */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		USoundCue* EquipSound;
+	USoundCue* EquipSound;
 
 	/** equip animations */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
-		FWeaponAnim EquipAnim;
+	FWeaponAnim EquipAnim;
 
 	/** fire animations */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
-		FWeaponAnim FireAnim;
+	FWeaponAnim FireAnim;
 
 	/** is muzzle FX looped? */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		uint32 bLoopedMuzzleFX : 1;
+	uint32 bLoopedMuzzleFX : 1;
 
 	/** is fire sound looped? */
 	UPROPERTY(EditDefaultsOnly, Category = Sound)
-		uint32 bLoopedFireSound : 1;
+	uint32 bLoopedFireSound : 1;
 
 	/** is fire animation looped? */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
-		uint32 bLoopedFireAnim : 1;
+	uint32 bLoopedFireAnim : 1;
 
 	/** is fire animation playing? */
 	uint32 bPlayingFireAnim : 1;
@@ -369,7 +373,7 @@ protected:
 
 	/** is reload animation playing? */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Reload)
-		uint32 bPendingReload : 1;
+	uint32 bPendingReload : 1;
 
 	/** is equip animation playing? */
 	uint32 bPendingEquip : 1;
@@ -391,15 +395,15 @@ protected:
 
 	/** current total ammo */
 	UPROPERTY(Transient, Replicated)
-		int32 CurrentAmmo;
+	int32 CurrentAmmo;
 
 	/** current ammo - inside clip */
 	UPROPERTY(Transient, Replicated)
-		int32 CurrentAmmoInClip;
+	int32 CurrentAmmoInClip;
 
 	/** burst counter, used for replicating fire events to remote clients */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_BurstCounter)
-		int32 BurstCounter;
+	int32 BurstCounter;
 
 	/** Handle for efficient management of OnEquipFinished timer */
 	FTimerHandle TimerHandle_OnEquipFinished;
@@ -417,29 +421,29 @@ protected:
 	// Input - server side
 
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerStartFire();
+	void ServerStartFire();
 
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerStopFire();
+	void ServerStopFire();
 
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerStartReload();
+	void ServerStartReload();
 
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerStopReload();
+	void ServerStopReload();
 
 
 	//////////////////////////////////////////////////////////////////////////
 	// Replication & effects
 
 	UFUNCTION()
-		void OnRep_MyPawn();
+	void OnRep_MyPawn();
 
 	UFUNCTION()
-		void OnRep_BurstCounter();
+	void OnRep_BurstCounter();
 
 	UFUNCTION()
-		void OnRep_Reload();
+	void OnRep_Reload();
 
 	/** Called in network play to do the cosmetic fx for firing */
 	virtual void SimulateWeaponFire();
@@ -456,7 +460,7 @@ protected:
 
 	/** [server] fire & update ammo */
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerHandleFiring();
+	void ServerHandleFiring();
 
 	/** [local + server] handle weapon fire */
 	void HandleFiring();

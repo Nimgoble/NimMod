@@ -4,4 +4,7 @@
 
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, NimMod, "NimMod" );
+
+DEFINE_LOG_CATEGORY(LogNimMod)
+DEFINE_LOG_CATEGORY(LogNimModWeapon)
  

@@ -17,6 +17,9 @@
 #define COLLISION_PROJECTILE	ECC_GameTraceChannel2
 #define COLLISION_PICKUP		ECC_GameTraceChannel3
 
+DECLARE_LOG_CATEGORY_EXTERN(LogNimMod, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogNimModWeapon, Log, All);
+
 #define MAX_PLAYER_NAME_LENGTH 16
 
 

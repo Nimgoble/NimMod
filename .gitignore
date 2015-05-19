@@ -50,3 +50,5 @@ Content/*
 
 .sdf
 *.sdf
+*.opensdf
+*.suo

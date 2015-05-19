@@ -18,20 +18,24 @@ ANimModWeapon::ANimModWeapon(const FObjectInitializer& ObjectInitializer) : Supe
 	Mesh1P->SetCollisionObjectType(ECC_WorldDynamic);
 	Mesh1P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Mesh1P->SetCollisionResponseToAllChannels(ECR_Ignore);
-	RootComponent = Mesh1P;
+	Mesh1P->SetOwnerNoSee(false);
+	Mesh1P->SetOnlyOwnerSee(true);
+	//RootComponent = Mesh1P;
 
 	Mesh3P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh3P"));
 	Mesh3P->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::OnlyTickPoseWhenRendered;
 	Mesh3P->bChartDistanceFactor = true;
 	Mesh3P->bReceivesDecals = false;
 	Mesh3P->CastShadow = true;
+	Mesh3P->SetOwnerNoSee(true);
+	Mesh3P->SetOnlyOwnerSee(false);
 	Mesh3P->SetCollisionObjectType(ECC_WorldDynamic);
 	Mesh3P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Mesh3P->SetCollisionResponseToAllChannels(ECR_Ignore);
 	Mesh3P->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Block);
 	Mesh3P->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	Mesh3P->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Block);
-	Mesh3P->AttachParent = Mesh1P;
+	//Mesh3P->AttachParent = Mesh1P;
 
 	bLoopedMuzzleFX = false;
 	bLoopedFireAnim = false;
@@ -182,11 +186,11 @@ void ANimModWeapon::AttachMeshToPawn()
 		if (MyPawn->IsLocallyControlled() == true)
 		{
 			USkeletalMeshComponent* PawnMesh1p = MyPawn->GetSpecifcPawnMesh(true);
-			USkeletalMeshComponent* PawnMesh3p = MyPawn->GetSpecifcPawnMesh(false);
+			//USkeletalMeshComponent* PawnMesh3p = MyPawn->GetSpecifcPawnMesh(false);
 			Mesh1P->SetHiddenInGame(false);
-			Mesh3P->SetHiddenInGame(false);
+			//Mesh3P->SetHiddenInGame(false);
 			Mesh1P->AttachTo(PawnMesh1p, AttachPoint1P);
-			Mesh3P->AttachTo(PawnMesh3p, AttachPoint);
+			//Mesh3P->AttachTo(PawnMesh3p, AttachPoint);
 		}
 		else
 		{
@@ -605,17 +609,29 @@ UAudioComponent* ANimModWeapon::PlayWeaponSound(USoundCue* Sound)
 
 float ANimModWeapon::PlayWeaponAnimation(const FWeaponAnim& Animation)
 {
-	float Duration = 0.0f;
+	float PawnDuration = 0.0f, WeaponDuration = 0.0f;
 	if (MyPawn)
 	{
-		UAnimMontage* UseAnim = MyPawn->IsFirstPerson() ? Animation.Pawn1P : Animation.Pawn3P;
-		if (UseAnim)
+		UAnimMontage* PawnUseAnim = MyPawn->IsFirstPerson() ? Animation.Pawn1P : Animation.Pawn3P;
+		if (PawnUseAnim)
 		{
-			Duration = MyPawn->PlayAnimMontage(UseAnim);
+			PawnDuration = MyPawn->PlayAnimMontage(PawnUseAnim);
+		}
+
+		UAnimMontage* WeaponUseAnim = MyPawn->IsFirstPerson() ? Animation.Weapon1P : Animation.Weapon3P;
+		if (WeaponUseAnim)
+		{
+			USkeletalMeshComponent* UseMesh = GetWeaponMesh();
+			if (WeaponUseAnim && UseMesh && UseMesh->AnimScriptInstance)
+			{
+				bool isPlaying = UseMesh->AnimScriptInstance->Montage_IsPlaying(WeaponUseAnim);
+				if (!isPlaying)
+					WeaponDuration = UseMesh->AnimScriptInstance->Montage_Play(WeaponUseAnim, 1.f);
+			}
 		}
 	}
 
-	return Duration;
+	return (PawnDuration > WeaponDuration) ? PawnDuration : WeaponDuration;
 }
 
 void ANimModWeapon::StopWeaponAnimation(const FWeaponAnim& Animation)
