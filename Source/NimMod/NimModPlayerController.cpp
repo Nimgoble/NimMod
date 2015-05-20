@@ -893,6 +893,11 @@ ANimModHUD* ANimModPlayerController::GetNimModHUD() const
 	return Cast<ANimModHUD>(GetHUD());
 }
 
+ANimModPlayerState *ANimModPlayerController::GetNimModPlayerState() const
+{
+	return Cast<ANimModPlayerState>(PlayerState);
+}
+
 
 //UNimModPersistentUser* ANimModPlayerController::GetPersistentUser() const
 //{

@@ -224,7 +224,7 @@ void ANimModCharacter::UpdateTeamColors(UMaterialInstanceDynamic* UseMID)
 		ANimModPlayerState* MyPlayerState = Cast<ANimModPlayerState>(PlayerState);
 		if (MyPlayerState != NULL)
 		{
-			float MaterialParam = (float)MyPlayerState->GetTeamNum();
+			float MaterialParam = (float)MyPlayerState->GetTeam();
 			UseMID->SetScalarParameterValue(TEXT("Team Color Index"), MaterialParam);
 		}
 	}

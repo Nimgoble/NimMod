@@ -7,7 +7,7 @@
 
 ANimModGameState::ANimModGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	NumTeams = 0;
+	NumTeams = 4;
 	RemainingTime = 0;
 	bTimerPaused = false;
 }

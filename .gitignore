@@ -52,3 +52,8 @@ Content/*
 *.sdf
 *.opensdf
 *.suo
+*.pdb
+Binaries/Win64/NimMod.lib
+Binaries/Win64/NimMod.exe
+Binaries/Win64/NimMod-Win64-DebugGame.lib
+Binaries/Win64/NimMod-Win64-DebugGame.exe

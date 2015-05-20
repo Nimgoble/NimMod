@@ -67,6 +67,15 @@ namespace ENimModDialogType
 	};
 }
 
+UENUM(BlueprintType)
+enum class NimModTeam : uint8
+{
+	SPECTATORS UMETA(DisplayName = "Spectators"),
+	ASSASSINS UMETA(DisplayName = "Assassins"),
+	BODYGUARDS UMETA(DisplayName = "Bodyguards"),
+	VIP UMETA(DisplayName = "VIP")
+};
+
 #define NIMMOD_SURFACE_Default		SurfaceType_Default
 #define NIMMOD_SURFACE_Concrete	SurfaceType1
 #define NIMMOD_SURFACE_Dirt		SurfaceType2

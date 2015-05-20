@@ -383,8 +383,12 @@ AActor* ANimModGameMode::ChoosePlayerStart(AController* Player)
 bool ANimModGameMode::IsSpawnpointAllowed(APlayerStart* SpawnPoint, AController* Player) const
 {
 	ANimModTeamStart* NimModSpawnPoint = Cast<ANimModTeamStart>(SpawnPoint);
-	if (NimModSpawnPoint)
+	ANimModPlayerController *nimModPlayerController = Cast<ANimModPlayerController>(Player);
+
+	if (NimModSpawnPoint && nimModPlayerController)
 	{
+		if (NimModSpawnPoint->SpawnTeam == nimModPlayerController->GetNimModPlayerState()->GetTeam())
+			return true;
 		/*ANimModAIController* AIController = Cast<ANimModAIController>(Player);
 		if (NimModSpawnPoint->bNotForBots && AIController)
 		{
@@ -395,7 +399,7 @@ bool ANimModGameMode::IsSpawnpointAllowed(APlayerStart* SpawnPoint, AController*
 		{
 			return false;
 		}*/
-		return true;
+		return false;
 	}
 
 	return false;

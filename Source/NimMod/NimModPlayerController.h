@@ -159,6 +159,8 @@ public:
 	/** Returns a pointer to the shooter game hud. May return NULL. */
 	ANimModHUD* GetNimModHUD() const;
 
+	ANimModPlayerState *GetNimModPlayerState() const;
+
 	/** Returns the persistent user record associated with this player, or null if there is't one. */
 	class UNimModPersistentUser* GetPersistentUser() const;
 

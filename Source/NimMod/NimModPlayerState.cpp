@@ -8,7 +8,7 @@
 
 ANimModPlayerState::ANimModPlayerState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	TeamNumber = 0;
+	Team = NimModTeam::SPECTATORS;
 	NumKills = 0;
 	NumDeaths = 0;
 	NumBulletsFired = 0;
@@ -44,9 +44,9 @@ void ANimModPlayerState::ClientInitialize(class AController* InController)
 	UpdateTeamColors();
 }
 
-void ANimModPlayerState::SetTeamNum(int32 NewTeamNumber)
+void ANimModPlayerState::SetTeam(NimModTeam NewTeam)
 {
-	TeamNumber = NewTeamNumber;
+	Team = NewTeam;
 
 	UpdateTeamColors();
 }
@@ -78,7 +78,7 @@ void ANimModPlayerState::CopyProperties(class APlayerState* PlayerState)
 	ANimModPlayerState* NimModPlayer = Cast<ANimModPlayerState>(PlayerState);
 	if (NimModPlayer)
 	{
-		NimModPlayer->TeamNumber = TeamNumber;
+		NimModPlayer->Team = Team;
 	}
 }
 
@@ -95,9 +95,9 @@ void ANimModPlayerState::UpdateTeamColors()
 	}
 }
 
-int32 ANimModPlayerState::GetTeamNum() const
+NimModTeam ANimModPlayerState::GetTeam() const
 {
-	return TeamNumber;
+	return Team;
 }
 
 int32 ANimModPlayerState::GetKills() const
@@ -145,14 +145,15 @@ void ANimModPlayerState::ScoreDeath(ANimModPlayerState* KilledBy, int32 Points)
 void ANimModPlayerState::ScorePoints(int32 Points)
 {
 	ANimModGameState* const MyGameState = Cast<ANimModGameState>(GetWorld()->GameState);
-	if (MyGameState && TeamNumber >= 0)
+	uint8 teamNumber = (uint8)Team;
+	if (MyGameState && teamNumber >= 0)
 	{
-		if (TeamNumber >= MyGameState->TeamScores.Num())
+		if (teamNumber >= MyGameState->TeamScores.Num())
 		{
-			MyGameState->TeamScores.AddZeroed(TeamNumber - MyGameState->TeamScores.Num() + 1);
+			MyGameState->TeamScores.AddZeroed(teamNumber - MyGameState->TeamScores.Num() + 1);
 		}
 
-		MyGameState->TeamScores[TeamNumber] += Points;
+		MyGameState->TeamScores[teamNumber] += Points;
 	}
 
 	Score += Points;
@@ -198,7 +199,7 @@ void ANimModPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ANimModPlayerState, TeamNumber);
+	DOREPLIFETIME(ANimModPlayerState, Team);
 	DOREPLIFETIME(ANimModPlayerState, NumKills);
 	DOREPLIFETIME(ANimModPlayerState, NumDeaths);
 }

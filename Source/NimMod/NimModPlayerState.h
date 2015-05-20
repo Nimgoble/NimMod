@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
+#include "NimModTypes.h"
 #include "NimModPlayerState.generated.h"
 
 /**
@@ -36,7 +37,7 @@ public:
 	*
 	* @param	NewTeamNumber	Team we want to be on.
 	*/
-	void SetTeamNum(int32 NewTeamNumber);
+	void SetTeam(NimModTeam NewTeam);
 
 	/** player killed someone */
 	void ScoreKill(ANimModPlayerState* Victim, int32 Points);
@@ -45,7 +46,7 @@ public:
 	void ScoreDeath(ANimModPlayerState* KilledBy, int32 Points);
 
 	/** get current team */
-	int32 GetTeamNum() const;
+	NimModTeam GetTeam() const;
 
 	/** get number of kills */
 	int32 GetKills() const;
@@ -70,15 +71,15 @@ public:
 
 	/** Sends kill (excluding self) to clients */
 	UFUNCTION(Reliable, Client)
-		void InformAboutKill(class ANimModPlayerState* KillerPlayerState, const UDamageType* KillerDamageType, class ANimModPlayerState* KilledPlayerState);
+	void InformAboutKill(class ANimModPlayerState* KillerPlayerState, const UDamageType* KillerDamageType, class ANimModPlayerState* KilledPlayerState);
 
 	/** broadcast death to local clients */
 	UFUNCTION(Reliable, NetMulticast)
-		void BroadcastDeath(class ANimModPlayerState* KillerPlayerState, const UDamageType* KillerDamageType, class ANimModPlayerState* KilledPlayerState);
+	void BroadcastDeath(class ANimModPlayerState* KillerPlayerState, const UDamageType* KillerDamageType, class ANimModPlayerState* KilledPlayerState);
 
 	/** replicate team colors. Updated the players mesh colors appropriately */
 	UFUNCTION()
-		void OnRep_TeamColor();
+	void OnRep_TeamColor();
 
 	//We don't need stats about amount of ammo fired to be server authenticated, so just increment these with local functions
 	void AddBulletsFired(int32 NumBullets);
@@ -95,27 +96,27 @@ protected:
 
 	/** team number */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamColor)
-		int32 TeamNumber;
+	NimModTeam Team;
 
 	/** number of kills */
 	UPROPERTY(Transient, Replicated)
-		int32 NumKills;
+	int32 NumKills;
 
 	/** number of deaths */
 	UPROPERTY(Transient, Replicated)
-		int32 NumDeaths;
+	int32 NumDeaths;
 
 	/** number of bullets fired this match */
 	UPROPERTY()
-		int32 NumBulletsFired;
+	int32 NumBulletsFired;
 
 	/** number of rockets fired this match */
 	UPROPERTY()
-		int32 NumRocketsFired;
+	int32 NumRocketsFired;
 
 	/** whether the user quit the match */
 	UPROPERTY()
-		uint8 bQuitter : 1;
+	uint8 bQuitter : 1;
 
 	/** helper for scoring points */
 	void ScorePoints(int32 Points);
