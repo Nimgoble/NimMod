@@ -135,6 +135,11 @@ void ANimModPlayerController::SetPlayer(UPlayer* InPlayer)
 	NimModIngameMenu->Construct(Cast<ULocalPlayer>(Player));*/
 }
 
+UNimModLocalPlayer *ANimModPlayerController::GetLocalPlayer()
+{
+	return Cast<UNimModLocalPlayer>(Player);
+}
+
 void ANimModPlayerController::QueryAchievements()
 {
 	// precache achievements

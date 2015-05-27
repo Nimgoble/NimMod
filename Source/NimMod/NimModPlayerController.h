@@ -3,6 +3,7 @@
 #include "NimMod.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Online.h"
 #include "NimModHUD.h"
+#include "NimModLocalPlayer.h"
 #include "NimModPlayerController.generated.h"
 
 UCLASS(config = Game)
@@ -172,6 +173,8 @@ public:
 
 	/** Associate a new UPlayer with this PlayerController. */
 	virtual void SetPlayer(UPlayer* Player);
+
+	UNimModLocalPlayer *GetLocalPlayer();
 
 	// end ANimModPlayerController-specific
 

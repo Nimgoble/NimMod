@@ -835,7 +835,9 @@ float ANimModCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float I
 	{
 		bool isPlaying = UseMesh->AnimScriptInstance->Montage_IsPlaying(AnimMontage);
 		if (!isPlaying)
-			return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+			UseMesh->AnimScriptInstance->Montage_Stop(0.0f, AnimMontage);
+
+		return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
 	}
 
 	return 0.0f;

@@ -5,12 +5,34 @@
 #include "Engine/Canvas.h"
 #include "TextureResource.h"
 #include "CanvasItem.h"
+#include "NimModPlayerController.h"
+#include "Blueprint/UserWidget.h"
 
 ANimModHUD::ANimModHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	// Set the crosshair texture
-	static ConstructorHelpers::FObjectFinder<UTexture2D> CrosshiarTexObj(TEXT("/Game/NimMod/Textures/FirstPersonCrosshair"));
-	CrosshairTex = CrosshiarTexObj.Object;
+	static ConstructorHelpers::FObjectFinder<UTexture2D> CrosshairTexObj(TEXT("/Game/NimMod/Textures/FirstPersonCrosshair"));
+	CrosshairTex = CrosshairTexObj.Object;
+}
+
+void ANimModHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (LayoutWidget != nullptr)
+	{
+		ANimModPlayerController *pc = Cast<ANimModPlayerController>(this->GetOwningPlayerController());
+		if (pc)
+		{
+			layoutWidget = CreateWidget<UNimModHUDLayoutWidget>(pc, LayoutWidget);
+			layoutWidget->AddToViewport(0);
+		}
+	}
+}
+
+void ANimModHUD::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }
 
 

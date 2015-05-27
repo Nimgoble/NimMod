@@ -28,7 +28,8 @@ public class NimMod : ModuleRules
 				"OnlineSubsystemUtils",
 				"AssetRegistry",
                 "AIModule",
-                "InputCore" 
+                "InputCore",
+                "UMG"
             }
         );
 
