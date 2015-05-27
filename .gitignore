@@ -59,3 +59,4 @@ Binaries/Win64/NimMod-Win64-DebugGame.lib
 Binaries/Win64/NimMod-Win64-DebugGame.exe
 *.pdb
 *.pdb
+*.pdb
