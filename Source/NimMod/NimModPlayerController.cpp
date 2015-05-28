@@ -15,6 +15,7 @@
 #include "Runtime/Online/OnlineSubsystem/Public/Interfaces/OnlineEventsInterface.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Interfaces/OnlineIdentityInterface.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Interfaces/OnlineSessionInterface.h"
+#include "Blueprint/UserWidget.h"
 
 #define  ACH_FRAG_SOMEONE	TEXT("ACH_FRAG_SOMEONE")
 #define  ACH_SOME_KILLS		TEXT("ACH_SOME_KILLS")
@@ -52,6 +53,7 @@ ANimModPlayerController::ANimModPlayerController(const FObjectInitializer& Objec
 	ServerSayString = TEXT("Say");
 	NimModFriendUpdateTimer = 0.0f;
 	bHasSentStartEvents = false;
+	TeamMenu = nullptr;
 }
 
 void ANimModPlayerController::SetupInputComponent()
@@ -64,6 +66,10 @@ void ANimModPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Scoreboard", IE_Released, this, &ANimModPlayerController::OnHideScoreboard);
 	InputComponent->BindAction("ConditionalCloseScoreboard", IE_Pressed, this, &ANimModPlayerController::OnConditionalCloseScoreboard);
 	InputComponent->BindAction("ToggleScoreboard", IE_Pressed, this, &ANimModPlayerController::OnToggleScoreboard);
+
+	InputComponent->BindAction("TeamMenu", IE_Pressed, this, &ANimModPlayerController::OnShowTeamMenu);
+	InputComponent->BindAction("TeamMenu", IE_Released, this, &ANimModPlayerController::OnHideTeamMenu);
+	InputComponent->BindAction("ToggleTeamMenu", IE_Pressed, this, &ANimModPlayerController::OnToggleTeamMenu);
 
 	// voice chat
 	InputComponent->BindAction("PushToTalk", IE_Pressed, this, &APlayerController::StartTalking);
@@ -133,6 +139,7 @@ void ANimModPlayerController::SetPlayer(UPlayer* InPlayer)
 	//Build menu only after game is initialized
 	/*NimModIngameMenu = MakeShareable(new FNimModIngameMenu());
 	NimModIngameMenu->Construct(Cast<ULocalPlayer>(Player));*/
+	//InitializeTeamMenu();
 }
 
 UNimModLocalPlayer *ANimModPlayerController::GetLocalPlayer()
@@ -480,6 +487,54 @@ void ANimModPlayerController::OnHideScoreboard()
 	//}
 }
 
+void ANimModPlayerController::OnToggleTeamMenu()
+{
+	if (TeamMenu == nullptr)
+		return;
+
+	TeamMenu->ToggleWidget();
+}
+
+void ANimModPlayerController::OnShowTeamMenu()
+{
+	if (TeamMenu == nullptr)
+		return;
+
+	if (TeamMenu->IsInViewport())
+		return;
+
+	TeamMenu->ShowWidget();
+}
+
+void ANimModPlayerController::OnHideTeamMenu()
+{
+	if (TeamMenu == nullptr)
+		return;
+
+	if (!TeamMenu->IsInViewport())
+		return;
+
+	TeamMenu->RemoveWidget();
+}
+
+//bool ANimModPlayerController::InitializeTeamMenu_Validate()
+//{
+//	return TeamMenu == nullptr;
+//}
+
+void ANimModPlayerController::InitializeTeamMenu()
+{
+	if 
+	(
+		TeamMenuWidget != nullptr && 
+		this->Player != nullptr &&
+		this->IsLocalPlayerController()
+	)
+	{
+		TeamMenu = CreateWidget<UNimModWidgetBase>(this, TeamMenuWidget);
+	}
+}
+
 bool ANimModPlayerController::IsGameMenuVisible() const
 {
 	bool Result = false;
@@ -525,6 +580,8 @@ void ANimModPlayerController::ClientGameStarted_Implementation()
 		NimModHUD->ShowScoreboard(false);
 	}*/
 	bGameEndedFrame = false;
+	InitializeTeamMenu();
+	OnShowTeamMenu();
 
 	QueryAchievements();
 
@@ -903,6 +960,11 @@ ANimModPlayerState *ANimModPlayerController::GetNimModPlayerState() const
 	return Cast<ANimModPlayerState>(PlayerState);
 }
 
+ANimModCharacter *ANimModPlayerController::GetNimModCharacter() const
+{
+	return Cast<ANimModCharacter>(GetCharacter());
+}
+
 
 //UNimModPersistentUser* ANimModPlayerController::GetPersistentUser() const
 //{
@@ -1213,4 +1275,26 @@ void ANimModPlayerController::PreClientTravel(const FString& PendingURL, ETravel
 		//	NimModHUD->ShowScoreboard(false, true);
 		//}
 	}
+}
+
+bool ANimModPlayerController::SetPlayerTeam_Validate(NimModTeam team)
+{
+	return true;
+}
+
+void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
+{
+	ANimModCharacter *nimModCharacter = GetNimModCharacter();
+	if (nimModCharacter->IsAlive())
+	{
+		FDamageEvent damageEvent;
+		nimModCharacter->Die(0.0f, damageEvent, this, NULL);
+	}
+	GetNimModPlayerState()->SetTeam(team);
+}
+
+NimModTeam ANimModPlayerController::GetPlayerTeam()
+{
+	ANimModPlayerState *playerState = GetNimModPlayerState();
+	return (playerState != nullptr) ? playerState->GetTeam() : NimModTeam::SPECTATORS;
 }

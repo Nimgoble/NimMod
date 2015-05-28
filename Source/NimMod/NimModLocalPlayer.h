@@ -12,8 +12,4 @@ UCLASS()
 class NIMMOD_API UNimModLocalPlayer : public ULocalPlayer
 {
 	GENERATED_BODY()
-	
-	
-	
-	
 };

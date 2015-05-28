@@ -27,6 +27,8 @@ ANimModGameMode::ANimModGameMode(const FObjectInitializer& ObjectInitializer)
 	BotPawnClass = BotPawnOb.Class;*/
 
 	HUDClass = ANimModHUD::StaticClass();
+	/*static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerClassFinder(TEXT("/Game/Blueprints/OurNimModGameMode"));
+	PlayerControllerClass = (PlayerControllerClassFinder.Succeeded() == false) ? ANimModPlayerController::StaticClass() : PlayerControllerClassFinder.Class;*/
 	PlayerControllerClass = ANimModPlayerController::StaticClass();
 	PlayerStateClass = ANimModPlayerState::StaticClass();
 	SpectatorClass = ANimModSpectatorPawn::StaticClass();
@@ -251,9 +253,10 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 
 	// update spectator location for client
 	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(NewPlayer);
-	if (NewPC && NewPC->GetPawn() == NULL)
+	if (NewPC /*&& NewPC->GetPawn() == NULL*/)
 	{
 		NewPC->ClientSetSpectatorCamera(NewPC->GetSpawnLocation(), NewPC->GetControlRotation());
+		//NewPC->OnShowTeamMenu();
 	}
 
 	// notify new player if match is already in progress

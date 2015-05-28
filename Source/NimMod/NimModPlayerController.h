@@ -4,6 +4,8 @@
 #include "Runtime/Online/OnlineSubsystem/Public/Online.h"
 #include "NimModHUD.h"
 #include "NimModLocalPlayer.h"
+#include "NimModTypes.h"
+#include "NimModWidgetBase.h"
 #include "NimModPlayerController.generated.h"
 
 UCLASS(config = Game)
@@ -14,34 +16,34 @@ class ANimModPlayerController : public APlayerController
 public:
 	/** sets spectator location and rotation */
 	UFUNCTION(reliable, client)
-		void ClientSetSpectatorCamera(FVector CameraLocation, FRotator CameraRotation);
+	void ClientSetSpectatorCamera(FVector CameraLocation, FRotator CameraRotation);
 
 	/** notify player about started match */
 	UFUNCTION(reliable, client)
-		void ClientGameStarted();
+	void ClientGameStarted();
 
 	/** Starts the online game using the session name in the PlayerState */
 	UFUNCTION(reliable, client)
-		void ClientStartOnlineGame();
+	void ClientStartOnlineGame();
 
 	/** Ends the online game using the session name in the PlayerState */
 	UFUNCTION(reliable, client)
-		void ClientEndOnlineGame();
+	void ClientEndOnlineGame();
 
 	/** notify player about finished match */
 	virtual void ClientGameEnded_Implementation(class AActor* EndGameFocus, bool bIsWinner);
 
 	/** Notifies clients to send the end-of-round event */
 	UFUNCTION(reliable, client)
-		void ClientSendRoundEndEvent(bool bIsWinner, int32 ExpendedTimeInSeconds);
+	void ClientSendRoundEndEvent(bool bIsWinner, int32 ExpendedTimeInSeconds);
 
 	/** used for input simulation from blueprint (for automatic perf tests) */
 	UFUNCTION(BlueprintCallable, Category = "Input")
-		void SimulateInputKey(FKey Key, bool bPressed = true);
+	void SimulateInputKey(FKey Key, bool bPressed = true);
 
 	/** sends cheat message */
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerCheat(const FString& Msg);
+	void ServerCheat(const FString& Msg);
 
 	/* Overriden Message implementation. */
 	virtual void ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime) override;
@@ -51,11 +53,11 @@ public:
 
 	/** Local function say a string */
 	UFUNCTION(exec)
-		virtual void Say(const FString& Msg);
+	virtual void Say(const FString& Msg);
 
 	/** RPC for clients to talk to server */
 	UFUNCTION(unreliable, server, WithValidation)
-		void ServerSay(const FString& Msg);
+	void ServerSay(const FString& Msg);
 
 	/** Local function run an emote */
 	// 	UFUNCTION(exec)
@@ -82,6 +84,25 @@ public:
 	/** hides scoreboard */
 	void OnHideScoreboard();
 
+	/** Toggles the Team Menu **/
+	void OnToggleTeamMenu();
+	void OnShowTeamMenu();
+	void OnHideTeamMenu();
+	void InitializeTeamMenu();
+
+	/*The type of UUserWidget that we should use as our team menu*/
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<class UNimModWidgetBase> TeamMenuWidget;
+	/*The instance of our TeamMenuWidget*/
+	UPROPERTY()
+	UNimModWidgetBase *TeamMenu;
+
+	UFUNCTION(BlueprintCallable, Server, reliable, WithValidation, Category = "UI")
+	void SetPlayerTeam(NimModTeam team);
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	NimModTeam GetPlayerTeam();
+
 	/** set infinite ammo cheat */
 	void SetInfiniteAmmo(bool bEnable);
 
@@ -93,7 +114,7 @@ public:
 
 	/** set god mode cheat */
 	UFUNCTION(exec)
-		void SetGodMode(bool bEnable);
+	void SetGodMode(bool bEnable);
 
 	/** get infinite ammo cheat */
 	bool HasInfiniteAmmo() const;
@@ -165,6 +186,8 @@ public:
 	/** Returns the persistent user record associated with this player, or null if there is't one. */
 	class UNimModPersistentUser* GetPersistentUser() const;
 
+	class ANimModCharacter *GetNimModCharacter() const;
+
 	/** Informs that player fragged someone */
 	void OnKill();
 
@@ -184,19 +207,19 @@ protected:
 
 	/** infinite ammo cheat */
 	UPROPERTY(Transient, Replicated)
-		uint8 bInfiniteAmmo : 1;
+	uint8 bInfiniteAmmo : 1;
 
 	/** infinite clip cheat */
 	UPROPERTY(Transient, Replicated)
-		uint8 bInfiniteClip : 1;
+	uint8 bInfiniteClip : 1;
 
 	/** health regen cheat */
 	UPROPERTY(Transient, Replicated)
-		uint8 bHealthRegen : 1;
+	uint8 bHealthRegen : 1;
 
 	/** god mode cheat */
 	UPROPERTY(Transient, Replicated)
-		uint8 bGodMode : 1;
+	uint8 bGodMode : 1;
 
 	/** if set, gameplay related actions (movement, weapn usage, etc) are allowed */
 	uint8 bAllowGameActions : 1;
@@ -257,11 +280,11 @@ protected:
 
 	/** Causes the player to commit suicide */
 	UFUNCTION(exec)
-		virtual void Suicide();
+	virtual void Suicide();
 
 	/** Notifies the server that the client has suicided */
 	UFUNCTION(reliable, server, WithValidation)
-		void ServerSuicide();
+	void ServerSuicide();
 
 	/** Updates achievements based on the PersistentUser stats at the end of a round */
 	void UpdateAchievementsOnGameEnd();

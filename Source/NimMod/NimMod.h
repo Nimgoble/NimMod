@@ -22,5 +22,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogNimModWeapon, Log, All);
 
 #define MAX_PLAYER_NAME_LENGTH 16
 
+#define ISDEDICATED (GEngine->GetNetMode(GetWorld()) == NM_DedicatedServer)
+#define ISLISTEN (GEngine->GetNetMode(GetWorld()) == NM_ListenServer)
+#define ISSTANDALONE (GEngine->GetNetMode(GetWorld()) == NM_Standalone)
+#define ISCLIENT (GEngine->GetNetMode(GetWorld()) == NM_Client)
+
 
 #endif

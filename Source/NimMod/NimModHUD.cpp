@@ -25,7 +25,7 @@ void ANimModHUD::BeginPlay()
 		if (pc)
 		{
 			layoutWidget = CreateWidget<UNimModHUDLayoutWidget>(pc, LayoutWidget);
-			layoutWidget->AddToViewport(0);
+			layoutWidget->AddToViewport(1);
 		}
 	}
 }
