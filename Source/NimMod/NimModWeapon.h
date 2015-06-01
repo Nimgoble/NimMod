@@ -41,6 +41,14 @@ struct FWeaponData
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
 	int32 InitialClips;
 
+	/** The slot this weapon will be in */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat, meta = (UIMin = 0, ClampMin = 0, UIMax = 9, ClampMax = 9))
+	int32 InventorySlot;
+
+	/** The order of this weapon in its slot */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat, meta = (UIMin = 0, ClampMin = 0, UIMax = 9, ClampMax = 9))
+	int32 InventorySlotOrder;
+
 	/** time between two consecutive shots */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
 	float TimeBetweenShots;
@@ -59,6 +67,8 @@ struct FWeaponData
 		InitialClips = 4;
 		TimeBetweenShots = 0.2f;
 		NoAnimReloadDuration = 1.0f;
+		InventorySlot = 0;
+		InventorySlotOrder = 0;
 	}
 };
 
@@ -161,7 +171,7 @@ public:
 
 	/** trigger reload from server */
 	UFUNCTION(reliable, client)
-		void ClientStartReload();
+	void ClientStartReload();
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -191,6 +201,10 @@ public:
 
 	/** get max ammo amount */
 	int32 GetMaxAmmo() const;
+
+	int32 GetInventorySlot() const;
+
+	int32 GetInventorySlotOrder() const;
 
 	/** get weapon mesh (needs pawn owner to determine variant) */
 	USkeletalMeshComponent* GetWeaponMesh() const;

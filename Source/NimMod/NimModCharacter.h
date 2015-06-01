@@ -170,11 +170,11 @@ public:
 	/** player released targeting action */
 	void OnStopTargeting();
 
-	/** player pressed next weapon action */
-	void OnNextWeapon();
+	///** player pressed next weapon action */
+	//void OnNextWeapon();
 
-	/** player pressed prev weapon action */
-	void OnPrevWeapon();
+	///** player pressed prev weapon action */
+	//void OnPrevWeapon();
 
 	/** player pressed reload action */
 	void OnReload();
@@ -193,6 +193,15 @@ public:
 
 	/** player released run action */
 	void OnStopRunning();
+
+	void OnCrouch();
+
+	void OnUnCrouch();
+
+	void UseSlot(int32 slot);
+
+	template<int32 Index>
+	void UseSlot();
 
 	//////////////////////////////////////////////////////////////////////////
 	// Reading data
@@ -218,7 +227,7 @@ public:
 	*
 	* @param Index Inventory index
 	*/
-	class ANimModWeapon* GetInventoryWeapon(int32 index) const;
+	//class ANimModWeapon* GetInventoryWeapon(int32 index) const;
 
 	/** get weapon taget modifier speed	*/
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
@@ -296,6 +305,17 @@ protected:
 	/** weapons in inventory */
 	UPROPERTY(Transient, Replicated)
 	TArray<class ANimModWeapon*> Inventory;
+
+	int32 GetWeaponInventoryIndex(class ANimModWeapon *weapon);
+
+	void GetSlotStartAndEnd(int32 slot, int32 &start, int32 &end);
+
+	bool DoesSlotHaveWeapons(int32 slot);
+
+	/*typedef TMap<uint32, class ANimModWeapon *> InventorySlot;
+	typedef TMap<uint32, InventorySlot> InventoryContainer;
+	UPROPERTY(Transient, Replicated)
+	InventoryContainer Inventory;*/
 
 	/** currently equipped weapon */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_CurrentWeapon)

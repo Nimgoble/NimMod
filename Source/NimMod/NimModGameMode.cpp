@@ -39,6 +39,7 @@ ANimModGameMode::ANimModGameMode(const FObjectInitializer& ObjectInitializer)
 	/*bAllowBots = true;
 	bNeedsBotCreation = true;*/
 	bUseSeamlessTravel = true;
+	bStartPlayersAsSpectators = true;
 }
 
 void ANimModGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -256,6 +257,7 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 	if (NewPC /*&& NewPC->GetPawn() == NULL*/)
 	{
 		NewPC->ClientSetSpectatorCamera(NewPC->GetSpawnLocation(), NewPC->GetControlRotation());
+		NewPC->ClientPutInServer();
 		//NewPC->OnShowTeamMenu();
 	}
 
@@ -265,6 +267,18 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 		NewPC->ClientGameStarted();
 		NewPC->ClientStartOnlineGame();
 	}
+}
+
+bool ANimModGameMode::PlayerCanRestart(APlayerController* Player)
+{
+	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(Player);
+	if (NewPC)
+	{
+		if (NewPC->GetPlayerTeam() == NimModTeam::SPECTATORS && !NewPC->HasHadInitialSpawn())
+			return false;
+	}
+
+	return Super::PlayerCanRestart(Player);
 }
 
 void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APawn* KilledPawn, const UDamageType* DamageType)

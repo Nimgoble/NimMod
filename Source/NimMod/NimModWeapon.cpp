@@ -952,6 +952,16 @@ int32 ANimModWeapon::GetMaxAmmo() const
 	return WeaponConfig.MaxAmmo;
 }
 
+int32 ANimModWeapon::GetInventorySlot() const
+{
+	return WeaponConfig.InventorySlot;
+}
+
+int32 ANimModWeapon::GetInventorySlotOrder() const
+{
+	return WeaponConfig.InventorySlotOrder;
+}
+
 bool ANimModWeapon::HasInfiniteAmmo() const
 {
 	const ANimModPlayerController* MyPC = (MyPawn != NULL) ? Cast<const ANimModPlayerController>(MyPawn->Controller) : NULL;

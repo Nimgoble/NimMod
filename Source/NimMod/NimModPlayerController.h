@@ -84,6 +84,10 @@ public:
 	/** hides scoreboard */
 	void OnHideScoreboard();
 
+	/** Do the initialization of the client-side stuff here **/
+	UFUNCTION(reliable, client)
+	void ClientPutInServer();
+
 	/** Toggles the Team Menu **/
 	void OnToggleTeamMenu();
 	void OnShowTeamMenu();
@@ -102,6 +106,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	NimModTeam GetPlayerTeam();
+
+	void StartSpectating();
+	bool IsSpectating();
+	void SpecNext();
+	void SpecPrev();
 
 	/** set infinite ammo cheat */
 	void SetInfiniteAmmo(bool bEnable);
@@ -136,6 +145,8 @@ public:
 
 	/** Ends and/or destroys game session */
 	void CleanupSessionOnReturnToMenu();
+
+	bool HasHadInitialSpawn() { return bHasHadInitialSpawn; }
 
 	/**
 	* Called when the read achievements request from the server is complete
@@ -304,6 +315,9 @@ protected:
 
 	// For tracking whether or not to send the end event
 	bool bHasSentStartEvents;
+
+	UPROPERTY(Transient, Replicated)
+	uint8 bHasHadInitialSpawn : 1;
 
 private:
 

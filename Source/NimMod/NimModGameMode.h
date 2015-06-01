@@ -21,6 +21,9 @@ public:
 	/** starts match warmup */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	/** @return true if it's valid to call RestartPlayer. Will call Player->CanRestartPlayer */
+	virtual bool PlayerCanRestart(APlayerController* Player);
+
 	/** select best spawn point for player */
 	virtual AActor* ChoosePlayerStart(AController* Player) override;
 

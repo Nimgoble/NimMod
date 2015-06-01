@@ -14,6 +14,8 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
+#define MAX_SLOTS_PER_INVENTORY_SLOT 3
+
 //////////////////////////////////////////////////////////////////////////
 // ANimModCharacter
 
@@ -58,6 +60,19 @@ ANimModCharacter::ANimModCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Block);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	// Adjust jump to make it less floaty
+	MoveComp->GravityScale = 1.5f;
+	MoveComp->JumpZVelocity = 620;
+	MoveComp->bCanWalkOffLedgesWhenCrouching = true;
+	MoveComp->MaxWalkSpeedCrouched = 200;
+
+	/* Ignore this channel or it will absorb the trace impacts instead of the skeletal mesh */
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+
+	// Enable crouching
+	MoveComp->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	TargetingSpeedModifier = 1.5f;
 	bIsTargeting = false;
@@ -576,6 +591,11 @@ void ANimModCharacter::SpawnDefaultInventory()
 		return;
 	}
 
+	//Initialize the empty array of our inventory.
+	int32 maxFlatInventoryCount = 10 * MAX_SLOTS_PER_INVENTORY_SLOT;
+	for (int32 i = 0; i < maxFlatInventoryCount; ++i)
+		Inventory.Add(nullptr);
+
 	int32 NumWeaponClasses = DefaultInventoryClasses.Num();
 	for (int32 i = 0; i < NumWeaponClasses; i++)
 	{
@@ -588,11 +608,21 @@ void ANimModCharacter::SpawnDefaultInventory()
 		}
 	}
 
-	// equip first weapon in inventory
-	if (Inventory.Num() > 0)
+
+	for (auto *weapon : Inventory)
 	{
-		EquipWeapon(Inventory[0]);
+		if (weapon != nullptr)
+		{
+			EquipWeapon(weapon);
+			break;
+		}
 	}
+	// equip first weapon in inventory
+	/*if (Inventory.Num() > 0)
+	{
+		if (Inventory[0].Num() > 0)
+			EquipWeapon(Inventory[0][0]);
+	}*/
 }
 
 void ANimModCharacter::DestroyInventory()
@@ -602,15 +632,24 @@ void ANimModCharacter::DestroyInventory()
 		return;
 	}
 
-	// remove all weapons from inventory and destroy them
-	for (int32 i = Inventory.Num() - 1; i >= 0; i--)
+	for (ANimModWeapon *nimModWeapon : Inventory)
 	{
-		ANimModWeapon* Weapon = Inventory[i];
-		if (Weapon)
+		if (nimModWeapon)
 		{
-			RemoveWeapon(Weapon);
-			Weapon->Destroy();
+			RemoveWeapon(nimModWeapon);
+			nimModWeapon->Destroy();
 		}
+		/*InventorySlot slot = slotKVP.Value;
+		while (slot.Num() != 0)
+		{
+			InventorySlot::TIterator iter = slot.CreateIterator();
+			ANimModWeapon *weapon = iter.Value;
+			if (weapon)
+			{
+				RemoveWeapon(weapon);
+				weapon->Destroy();
+			}
+		}*/
 	}
 }
 
@@ -618,8 +657,13 @@ void ANimModCharacter::AddWeapon(ANimModWeapon* Weapon)
 {
 	if (Weapon && Role == ROLE_Authority)
 	{
+		int32 weaponIndex = GetWeaponInventoryIndex(Weapon);
+		if (Inventory[weaponIndex] != nullptr)
+			return;
+
+		Inventory[weaponIndex] = Weapon;
+		//slot.KeySort(TLess<uint32>());
 		Weapon->OnEnterInventory(this);
-		Inventory.AddUnique(Weapon);
 	}
 }
 
@@ -627,20 +671,45 @@ void ANimModCharacter::RemoveWeapon(ANimModWeapon* Weapon)
 {
 	if (Weapon && Role == ROLE_Authority)
 	{
+		int32 weaponIndex = GetWeaponInventoryIndex(Weapon);
+		Inventory[weaponIndex] = nullptr;
 		Weapon->OnLeaveInventory();
-		Inventory.RemoveSingle(Weapon);
 	}
 }
 
+int32 ANimModCharacter::GetWeaponInventoryIndex(class ANimModWeapon *weapon)
+{
+	return (weapon->GetInventorySlot() * MAX_SLOTS_PER_INVENTORY_SLOT) + weapon->GetInventorySlotOrder();
+}
+
+bool ANimModCharacter::DoesSlotHaveWeapons(int32 slot)
+{
+	int32 slotStart, slotEnd;
+	GetSlotStartAndEnd(slot, slotStart, slotEnd);
+	for (int32 index = slotStart; index < slotEnd; ++index)
+	{
+		if (Inventory[index] != nullptr)
+			return true;
+	}
+	return false;
+}
+
+void ANimModCharacter::GetSlotStartAndEnd(int32 slot, int32 &start, int32 &end)
+{
+	start = slot * MAX_SLOTS_PER_INVENTORY_SLOT;
+	end = start + MAX_SLOTS_PER_INVENTORY_SLOT;
+}
+
+//Is this needed?
 ANimModWeapon* ANimModCharacter::FindWeapon(TSubclassOf<ANimModWeapon> WeaponClass)
 {
-	for (int32 i = 0; i < Inventory.Num(); i++)
+	/*for (int32 i = 0; i < Inventory.Num(); i++)
 	{
 		if (Inventory[i] && Inventory[i]->IsA(WeaponClass))
 		{
 			return Inventory[i];
 		}
-	}
+	}*/
 
 	return NULL;
 }
@@ -886,8 +955,19 @@ void ANimModCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 	InputComponent->BindAction("Targeting", IE_Pressed, this, &ANimModCharacter::OnStartTargeting);
 	InputComponent->BindAction("Targeting", IE_Released, this, &ANimModCharacter::OnStopTargeting);
 
-	InputComponent->BindAction("NextWeapon", IE_Pressed, this, &ANimModCharacter::OnNextWeapon);
-	InputComponent->BindAction("PrevWeapon", IE_Pressed, this, &ANimModCharacter::OnPrevWeapon);
+	/*InputComponent->BindAction("NextWeapon", IE_Pressed, this, &ANimModCharacter::OnNextWeapon);
+	InputComponent->BindAction("PrevWeapon", IE_Pressed, this, &ANimModCharacter::OnPrevWeapon);*/
+
+	InputComponent->BindAction("Slot1", IE_Pressed, this, &ANimModCharacter::UseSlot<1>);
+	InputComponent->BindAction("Slot2", IE_Pressed, this, &ANimModCharacter::UseSlot<2>);
+	InputComponent->BindAction("Slot3", IE_Pressed, this, &ANimModCharacter::UseSlot<3>);
+	InputComponent->BindAction("Slot4", IE_Pressed, this, &ANimModCharacter::UseSlot<4>);
+	InputComponent->BindAction("Slot5", IE_Pressed, this, &ANimModCharacter::UseSlot<5>);
+	InputComponent->BindAction("Slot6", IE_Pressed, this, &ANimModCharacter::UseSlot<6>);
+	InputComponent->BindAction("Slot7", IE_Pressed, this, &ANimModCharacter::UseSlot<7>);
+	InputComponent->BindAction("Slot8", IE_Pressed, this, &ANimModCharacter::UseSlot<8>);
+	InputComponent->BindAction("Slot9", IE_Pressed, this, &ANimModCharacter::UseSlot<9>);
+	InputComponent->BindAction("Slot0", IE_Pressed, this, &ANimModCharacter::UseSlot<0>);
 
 	InputComponent->BindAction("Reload", IE_Pressed, this, &ANimModCharacter::OnReload);
 
@@ -895,8 +975,11 @@ void ANimModCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 	InputComponent->BindAction("Jump", IE_Released, this, &ANimModCharacter::OnStopJump);
 
 	InputComponent->BindAction("Run", IE_Pressed, this, &ANimModCharacter::OnStartRunning);
-	InputComponent->BindAction("RunToggle", IE_Pressed, this, &ANimModCharacter::OnStartRunningToggle);
 	InputComponent->BindAction("Run", IE_Released, this, &ANimModCharacter::OnStopRunning);
+	InputComponent->BindAction("RunToggle", IE_Pressed, this, &ANimModCharacter::OnStartRunningToggle);
+	
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ANimModCharacter::OnCrouch);
+	InputComponent->BindAction("Crouch", IE_Released, this, &ANimModCharacter::OnUnCrouch);
 }
 
 
@@ -957,6 +1040,7 @@ void ANimModCharacter::OnStartPrimaryFire()
 		{
 			SetRunning(false, false);
 		}
+		MyPC->StartFire();
 		StartWeaponFire();
 	}
 }
@@ -1002,33 +1086,120 @@ void ANimModCharacter::OnStopTargeting()
 	SetTargeting(false);
 }
 
-void ANimModCharacter::OnNextWeapon()
+void ANimModCharacter::UseSlot(int32 slot)
 {
-	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
+	//Make sure we have some weapons
+	if (Inventory.Num() == 0)
+		return;
+
+	//Make sure the slot has weapons
+	if (!DoesSlotHaveWeapons(slot))
+		return;
+
+	int32 slotStart, slotEnd;
+	GetSlotStartAndEnd(slot, slotStart, slotEnd);
+
+	if (CurrentWeapon == nullptr || slot != CurrentWeapon->GetInventorySlot())
 	{
-		if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
+		//Find the first weapon in this slot and assign it.
+		ANimModWeapon *weapon = nullptr;
+		for( int32 index = slotStart; index < slotEnd; ++index)
 		{
-			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
-			ANimModWeapon* NextWeapon = Inventory[(CurrentWeaponIdx + 1) % Inventory.Num()];
-			EquipWeapon(NextWeapon);
+			weapon = Inventory[index];
+			if (weapon)
+			{
+				EquipWeapon(weapon);
+				break;
+			}
 		}
+	}
+	else
+	{
+
+		//Determine if we're cycling through a slot, or switching to a new one.
+		int32 currentWeaponIndex = GetWeaponInventoryIndex(CurrentWeapon);
+		ANimModWeapon *newWeapon = nullptr;
+		//Cycling.  Find the next weapon in this slot
+		for (int32 index = currentWeaponIndex + 1; index < slotEnd; ++index)
+		{
+			newWeapon = Inventory[index];
+			if (newWeapon != nullptr)
+				break;
+		}
+
+		//No weapons in this slot after our current weapon?  Check the weapons before this weapon
+		if (newWeapon == nullptr && currentWeaponIndex != slotStart)
+		{
+			for (int32 index = slotStart; index < currentWeaponIndex; ++index)
+			{
+				newWeapon = Inventory[index];
+				if (newWeapon != nullptr)
+					break;
+			}
+		}
+
+		//Did we find anything?
+		if (newWeapon != nullptr)
+			EquipWeapon(newWeapon);
+
+		/*if (slot == CurrentWeapon->GetInventorySlot())
+		{
+			
+		}*/
+		//else
+		//{
+		//	//Find the first weapon in this slot and assign it.
+		//	ANimModWeapon *weapon = nullptr;
+		//	for (int index = slotStart; index < slotEnd; ++index)
+		//	{
+		//		weapon = Inventory[index];
+		//		if (weapon)
+		//		{
+		//			EquipWeapon(weapon);
+		//			break;
+		//		}
+		//	}
+		//}
 	}
 }
 
-void ANimModCharacter::OnPrevWeapon()
+template<int32 Index>
+void ANimModCharacter::UseSlot()
 {
-	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
-	{
-		if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
-		{
-			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
-			ANimModWeapon* PrevWeapon = Inventory[(CurrentWeaponIdx - 1 + Inventory.Num()) % Inventory.Num()];
-			EquipWeapon(PrevWeapon);
-		}
-	}
+	UseSlot(Index);
 }
+
+//void ANimModCharacter::OnNextWeapon()
+//{
+//	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+//	if (MyPC && MyPC->IsGameInputAllowed())
+//	{
+//		if (CurrentWeapon != NULL)
+//		{
+//
+//		}
+//		if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
+//		{
+//			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
+//			ANimModWeapon* NextWeapon = Inventory[(CurrentWeaponIdx + 1) % Inventory.Num()];
+//			EquipWeapon(NextWeapon);
+//		}
+//	}
+//}
+//
+//void ANimModCharacter::OnPrevWeapon()
+//{
+//	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+//	if (MyPC && MyPC->IsGameInputAllowed())
+//	{
+//		if (Inventory.Num() >= 2 && (CurrentWeapon == NULL || CurrentWeapon->GetCurrentState() != EWeaponState::Equipping))
+//		{
+//			const int32 CurrentWeaponIdx = Inventory.IndexOfByKey(CurrentWeapon);
+//			ANimModWeapon* PrevWeapon = Inventory[(CurrentWeaponIdx - 1 + Inventory.Num()) % Inventory.Num()];
+//			EquipWeapon(PrevWeapon);
+//		}
+//	}
+//}
 
 void ANimModCharacter::OnReload()
 {
@@ -1073,6 +1244,19 @@ void ANimModCharacter::OnStartRunningToggle()
 void ANimModCharacter::OnStopRunning()
 {
 	SetRunning(false, false);
+}
+
+void ANimModCharacter::OnCrouch()
+{
+	if (CanCrouch())
+		Crouch();
+}
+
+void ANimModCharacter::OnUnCrouch()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (MoveComp && MoveComp->IsCrouching())
+		UnCrouch();
 }
 
 bool ANimModCharacter::IsRunning() const
@@ -1180,10 +1364,10 @@ int32 ANimModCharacter::GetInventoryCount() const
 	return Inventory.Num();
 }
 
-ANimModWeapon* ANimModCharacter::GetInventoryWeapon(int32 index) const
-{
-	return Inventory[index];
-}
+//ANimModWeapon* ANimModCharacter::GetInventoryWeapon(int32 index) const
+//{
+//	return Inventory[index];
+//}
 
 USkeletalMeshComponent* ANimModCharacter::GetPawnMesh() const
 {

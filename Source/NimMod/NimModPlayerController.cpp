@@ -54,6 +54,7 @@ ANimModPlayerController::ANimModPlayerController(const FObjectInitializer& Objec
 	NimModFriendUpdateTimer = 0.0f;
 	bHasSentStartEvents = false;
 	TeamMenu = nullptr;
+	bHasHadInitialSpawn = false;
 }
 
 void ANimModPlayerController::SetupInputComponent()
@@ -76,6 +77,9 @@ void ANimModPlayerController::SetupInputComponent()
 	InputComponent->BindAction("PushToTalk", IE_Released, this, &APlayerController::StopTalking);
 
 	InputComponent->BindAction("ToggleChat", IE_Pressed, this, &ANimModPlayerController::ToggleChatWindow);
+
+	InputComponent->BindAction("SpecNext", IE_Pressed, this, &ANimModPlayerController::SpecNext).bConsumeInput = false;
+	InputComponent->BindAction("SpecPrev", IE_Pressed, this, &ANimModPlayerController::SpecPrev).bConsumeInput = false;
 }
 
 
@@ -198,7 +202,14 @@ void ANimModPlayerController::OnQueryAchievementsComplete(const FUniqueNetId& Pl
 
 void ANimModPlayerController::UnFreeze()
 {
-	ServerRestartPlayer();
+	if (!bHasHadInitialSpawn)
+		bHasHadInitialSpawn = true;
+
+	NimModTeam currentTeam = GetPlayerTeam();
+	if (currentTeam != NimModTeam::SPECTATORS)
+		ServerRestartPlayer();
+	else
+		StartSpectating();
 }
 
 void ANimModPlayerController::FailedToSpawnPawn()
@@ -487,6 +498,12 @@ void ANimModPlayerController::OnHideScoreboard()
 	//}
 }
 
+void ANimModPlayerController::ClientPutInServer_Implementation()
+{
+	InitializeTeamMenu();
+	OnShowTeamMenu();
+}
+
 void ANimModPlayerController::OnToggleTeamMenu()
 {
 	if (TeamMenu == nullptr)
@@ -580,8 +597,8 @@ void ANimModPlayerController::ClientGameStarted_Implementation()
 		NimModHUD->ShowScoreboard(false);
 	}*/
 	bGameEndedFrame = false;
-	InitializeTeamMenu();
-	OnShowTeamMenu();
+	/*InitializeTeamMenu();
+	OnShowTeamMenu();*/
 
 	QueryAchievements();
 
@@ -859,6 +876,7 @@ void ANimModPlayerController::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 
 	DOREPLIFETIME_CONDITION(ANimModPlayerController, bInfiniteAmmo, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ANimModPlayerController, bInfiniteClip, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ANimModPlayerController, bHasHadInitialSpawn, COND_OwnerOnly);
 }
 
 void ANimModPlayerController::Suicide()
@@ -1279,22 +1297,76 @@ void ANimModPlayerController::PreClientTravel(const FString& PendingURL, ETravel
 
 bool ANimModPlayerController::SetPlayerTeam_Validate(NimModTeam team)
 {
-	return true;
+	return GetPlayerTeam() != team;
 }
 
 void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
 {
-	ANimModCharacter *nimModCharacter = GetNimModCharacter();
-	if (nimModCharacter->IsAlive())
-	{
-		FDamageEvent damageEvent;
-		nimModCharacter->Die(0.0f, damageEvent, this, NULL);
-	}
+	NimModTeam currentTeam = GetPlayerTeam();
+	if (currentTeam == team)
+		return;
+
 	GetNimModPlayerState()->SetTeam(team);
+
+	if (currentTeam == NimModTeam::SPECTATORS || !bHasHadInitialSpawn)
+	{
+		UnFreeze();
+	}
+	else
+	{
+		ANimModCharacter *nimModCharacter = GetNimModCharacter();
+		if (nimModCharacter)
+		{
+			if (nimModCharacter->IsAlive())
+			{
+				nimModCharacter->Suicide();
+				/*FDamageEvent damageEvent;
+				nimModCharacter->Die(0.0f, damageEvent, this, NULL);*/
+			}
+		}
+		else
+			BeginInactiveState();
+	}
+		
 }
 
 NimModTeam ANimModPlayerController::GetPlayerTeam()
 {
 	ANimModPlayerState *playerState = GetNimModPlayerState();
 	return (playerState != nullptr) ? playerState->GetTeam() : NimModTeam::SPECTATORS;
+}
+
+void ANimModPlayerController::StartSpectating()
+{
+	/* Update the state on server */
+	PlayerState->bIsSpectator = true;
+	/* Waiting to respawn */
+	bPlayerIsWaiting = true;
+	ChangeState(NAME_Spectating);
+	/* Push the state update to the client */
+	ClientGotoState(NAME_Spectating);
+
+	/* Focus on the remaining alive player */
+	ViewAPlayer(1);
+
+	/* Update the HUD to show the spectator screen */
+	//ClientHUDStateChanged(EHUDState::Spectating);
+}
+bool ANimModPlayerController::IsSpectating()
+{
+	return IsInState(NAME_Spectating) || GetPlayerTeam() == NimModTeam::SPECTATORS;
+}
+void ANimModPlayerController::SpecNext()
+{
+	if (!IsSpectating())
+		return;
+
+	ViewAPlayer(+1);
+}
+void ANimModPlayerController::SpecPrev()
+{
+	if (!IsSpectating())
+		return;
+
+	ViewAPlayer(-1);
 }
