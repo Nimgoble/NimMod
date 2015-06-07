@@ -124,6 +124,8 @@ void ANimModWeapon::OnEquipFinished()
 		{
 			StartReload();
 		}
+		else
+			PlayWeaponAnimation(IdleAnim);
 	}
 
 
@@ -982,4 +984,12 @@ float ANimModWeapon::GetEquipStartedTime() const
 float ANimModWeapon::GetEquipDuration() const
 {
 	return EquipDuration;
+}
+
+UAnimMontage *ANimModWeapon::GetIdleAnimation()
+{
+	if (MyPawn)
+		return MyPawn->IsFirstPerson() ? IdleAnim.Pawn1P : IdleAnim.Pawn3P;
+	
+	return nullptr;
 }

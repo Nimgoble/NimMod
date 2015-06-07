@@ -906,7 +906,12 @@ float ANimModCharacter::PlayAnimMontage(class UAnimMontage* AnimMontage, float I
 		if (!isPlaying)
 			UseMesh->AnimScriptInstance->Montage_Stop(0.0f, AnimMontage);
 
-		return UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+		float rtn = UseMesh->AnimScriptInstance->Montage_Play(AnimMontage, InPlayRate);
+
+		/*FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &ANimModCharacter::OnMontageEnded);
+		UseMesh->AnimScriptInstance->Montage_SetEndDelegate(EndDelegate, AnimMontage);*/
+		return rtn;
 	}
 
 	return 0.0f;
@@ -928,6 +933,23 @@ void ANimModCharacter::StopAllAnimMontages()
 	if (UseMesh && UseMesh->AnimScriptInstance)
 	{
 		UseMesh->AnimScriptInstance->Montage_Stop(0.0f);
+	}
+}
+
+void ANimModCharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (CurrentWeapon == nullptr)
+		return;
+
+	USkeletalMeshComponent* UseMesh = GetPawnMesh();
+	if (UseMesh && UseMesh->AnimScriptInstance)
+	{
+		if (!UseMesh->AnimScriptInstance->Montage_IsPlaying(nullptr))
+		{
+			UAnimMontage *idleAnimation = CurrentWeapon->GetIdleAnimation();
+			if (idleAnimation)
+				PlayAnimMontage(idleAnimation);
+		}
 	}
 }
 
