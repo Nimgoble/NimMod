@@ -119,6 +119,10 @@ public:
 	/** stop playing all montages */
 	void StopAllAnimMontages();
 
+	UFUNCTION()
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+public:
+
 	//////////////////////////////////////////////////////////////////////////
 	// Input handlers
 

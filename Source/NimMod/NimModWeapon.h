@@ -72,21 +72,21 @@ struct FWeaponData
 	}
 };
 
-USTRUCT()
+USTRUCT(blueprintable)
 struct FWeaponAnim
 {
 	GENERATED_USTRUCT_BODY()
 
 	/** animation played on pawn (1st person view) */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	UAnimMontage* Pawn1P;
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	UAnimMontage* Weapon1P;
 
 	/** animation played on pawn (3rd person view) */
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	UAnimMontage* Pawn3P;
-	UPROPERTY(EditDefaultsOnly, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	UAnimMontage* Weapon3P;
 };
 
@@ -191,19 +191,25 @@ public:
 	EWeaponState::Type GetCurrentState() const;
 
 	/** get current ammo amount (total) */
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetCurrentAmmo() const;
 
 	/** get current ammo amount (clip) */
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetCurrentAmmoInClip() const;
 
 	/** get clip size */
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetAmmoPerClip() const;
 
 	/** get max ammo amount */
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetMaxAmmo() const;
 
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetInventorySlot() const;
 
+	UFUNCTION(BlueprintCallable, Category = Ammo)
 	int32 GetInventorySlotOrder() const;
 
 	/** get weapon mesh (needs pawn owner to determine variant) */
@@ -212,6 +218,9 @@ public:
 	/** get pawn owner */
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
 	class ANimModCharacter* GetPawnOwner() const;
+
+	UFUNCTION(BlueprintCallable, Category = Animation)
+	UAnimMontage *GetIdleAnimation();
 
 	/** icon displayed on the HUD when weapon is equipped as primary */
 	UPROPERTY(EditDefaultsOnly, Category = HUD)
@@ -363,6 +372,10 @@ protected:
 	/** fire animations */
 	UPROPERTY(EditDefaultsOnly, Category = Animation)
 	FWeaponAnim FireAnim;
+
+	/** fire animations */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	FWeaponAnim IdleAnim;
 
 	/** is muzzle FX looped? */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
