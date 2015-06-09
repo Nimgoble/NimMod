@@ -33,6 +33,8 @@ public:
 
 	virtual void BeginPlay() override;
 
+	class ANimModPlayerController *GetNimModPlayerController();
+
 	/**
 	* Add camera pitch to first person mesh.
 	*

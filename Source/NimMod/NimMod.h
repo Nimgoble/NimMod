@@ -25,6 +25,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogNimModWeapon, Log, All);
 #define ISDEDICATED (GEngine->GetNetMode(GetWorld()) == NM_DedicatedServer)
 #define ISLISTEN (GEngine->GetNetMode(GetWorld()) == NM_ListenServer)
 #define ISSTANDALONE (GEngine->GetNetMode(GetWorld()) == NM_Standalone)
+#define ISSERVER (GEngine->GetNetMode(GetWorld()) < NM_Client)
 #define ISCLIENT (GEngine->GetNetMode(GetWorld()) == NM_Client)
 
 

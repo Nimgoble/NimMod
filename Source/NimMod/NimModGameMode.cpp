@@ -479,3 +479,63 @@ void ANimModGameMode::RestartGame()
 	Super::RestartGame();
 }
 
+bool ANimModGameMode::ShouldReset(AActor* ActorToReset)
+{
+	return true;
+}
+
+/** Resets level by calling Reset() on all actors */
+void ANimModGameMode::ResetLevel()
+{
+	if (!ISSERVER)
+		return;
+	//Players should already be frozen
+	//FreezePlayers();
+
+	//Reset the level
+	Super::ResetLevel();
+
+	//Unfreeze the players.
+	UnfreezePlayers();
+}
+
+void ANimModGameMode::FreezePlayers()
+{
+	if (!ISSERVER)
+		return;
+
+	//Freeze the players
+	UWorld *world = GetWorld();
+	if (!world)
+		return;
+
+	for (FConstControllerIterator Iterator = world->GetControllerIterator(); Iterator; ++Iterator)
+	{
+		AController* Controller = *Iterator;
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetIgnoreMoveInput(true);
+			PlayerController->SetIgnoreLookInput(true);
+		}
+	}
+}
+
+void ANimModGameMode::UnfreezePlayers()
+{
+	if (!ISSERVER)
+		return;
+
+	//Unfreeze the players
+	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+	{
+		AController* Controller = *Iterator;
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetIgnoreMoveInput(false);
+			PlayerController->SetIgnoreLookInput(false);
+		}
+	}
+}
+

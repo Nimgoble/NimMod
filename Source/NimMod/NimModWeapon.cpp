@@ -124,8 +124,8 @@ void ANimModWeapon::OnEquipFinished()
 		{
 			StartReload();
 		}
-		else
-			PlayWeaponAnimation(IdleAnim);
+		/*else
+			PlayWeaponAnimation(IdleAnim);*/
 	}
 
 

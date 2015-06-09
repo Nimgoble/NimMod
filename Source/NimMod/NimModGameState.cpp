@@ -10,6 +10,10 @@ ANimModGameState::ANimModGameState(const FObjectInitializer& ObjectInitializer) 
 	NumTeams = 4;
 	RemainingTime = 0;
 	bTimerPaused = false;
+	for (int i = 0; i <= (int32)NimModTeam::VIP; ++i)
+	{
+		TeamScores.Add(0);
+	}
 }
 
 void ANimModGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

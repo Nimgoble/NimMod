@@ -183,6 +183,11 @@ void ANimModCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+class ANimModPlayerController *ANimModCharacter::GetNimModPlayerController()
+{
+	return Cast<ANimModPlayerController>(Controller);
+}
+
 FRotator ANimModCharacter::GetAimOffsets() const
 {
 	const FVector AimDirWS = GetBaseAimRotation().Vector();

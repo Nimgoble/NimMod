@@ -101,6 +101,19 @@ protected:
 
 public:
 
+	/**
+	* @return true if ActorToReset should have Reset() called on it while restarting the game,
+	*		   false if the GameMode will manually reset it or if the actor does not need to be reset
+	*/
+	virtual bool ShouldReset(AActor* ActorToReset);
+
+	/** Resets level by calling Reset() on all actors */
+	virtual void ResetLevel();
+
+	void FreezePlayers();
+
+	void UnfreezePlayers();
+
 	/** finish current match and lock players */
 	UFUNCTION(exec)
 	void FinishMatch();
