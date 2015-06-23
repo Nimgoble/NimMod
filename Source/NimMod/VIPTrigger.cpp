@@ -5,6 +5,7 @@
 #include "NimModPlayerController.h"
 #include "NimModGameMode.h"
 #include "NimModTypes.h"
+#include "NimModRoundManager.h"
 #include "VIPTrigger.h"
 
 AVIPTrigger::AVIPTrigger(const class FObjectInitializer& PCIP) : Super(PCIP)
@@ -12,16 +13,15 @@ AVIPTrigger::AVIPTrigger(const class FObjectInitializer& PCIP) : Super(PCIP)
 
 }
 
-
 void AVIPTrigger::ActorEnteredVolume(class AActor* Other)
 {
 	Super::ActorEnteredVolume(Other);
 
-	if (!ISSERVER)
-		return;
+	/*if (!ISSERVER)
+		return;*/
 
 	ANimModCharacter *character = Cast<ANimModCharacter>(Other);
-	if (!character)
+ 	if (!character)
 		return;
 
 	ANimModPlayerController *pc = character->GetNimModPlayerController();
@@ -34,20 +34,44 @@ void AVIPTrigger::ActorEnteredVolume(class AActor* Other)
 		ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
 		int32 teamIndex = ((int32)NimModTeam::VIP);
 		gameState->TeamScores[teamIndex] += 10;
-		//Freeze the players and start the countdown to round restart
-		ANimModGameMode *gameMode = Cast<ANimModGameMode>(GetWorld()->GetAuthGameMode());
-		gameMode->FreezePlayers();
 
-		GetWorld()->GetTimerManager().SetTimer(restartHandle, this, &AVIPTrigger::RestartLevel, 3.0f);
+		if (RoundManager != nullptr)
+		{
+			RoundManager->VIPEscaped();
+		}
+
+		////Freeze the players and start the countdown to round restart
+		//if (RoundManager != nullptr)
+		//{
+		//	RoundManager->FreezePlayers();
+		//}
+		//else
+		//{
+		//	ANimModGameMode *gameMode = Cast<ANimModGameMode>(GetWorld()->GetAuthGameMode());
+		//	gameMode->FreezePlayers();
+		//}
+
+		///*if (ISSERVER)
+		//{*/
+		//	GetWorld()->GetTimerManager().SetTimer(restartHandle, this, &AVIPTrigger::RestartLevel, 3.0f);
+		////}
 	}
 }
 
 //Restart, reset; Whatever.
-void AVIPTrigger::RestartLevel()
-{
-	GetWorld()->GetTimerManager().ClearTimer(restartHandle);
-	ANimModGameMode *gameMode = Cast<ANimModGameMode>(GetWorld()->GetAuthGameMode());
-	//Let's hope this works...
-	gameMode->ResetLevel();
-}
+//void AVIPTrigger::RestartLevel()
+//{
+//	GetWorld()->GetTimerManager().ClearTimer(restartHandle);
+//
+//	if (RoundManager != nullptr)
+//	{
+//		RoundManager->RestartRound();
+//	}
+//	else
+//	{
+//		ANimModGameMode *gameMode = Cast<ANimModGameMode>(GetWorld()->GetAuthGameMode());
+//		//Let's hope this works...
+//		gameMode->RestartRound();
+//	}
+//}
 

@@ -26,15 +26,15 @@ ANimModCharacter::ANimModCharacter(const FObjectInitializer& ObjectInitializer)
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(46.f, 92.0f);
 
-	CharacterCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FirstPersonCamera"));
-	CharacterCameraComponent->AttachParent = GetCapsuleComponent();
+	/*CharacterCameraComponent = ObjectInitializer.CreateDefaultSubobject<UCameraComponent>(this, TEXT("FirstPersonCamera"));
+	CharacterCameraComponent->AttachParent = GetCapsuleComponent();*/
 	DefaultBaseEyeHeight = 71.f;
 	BaseEyeHeight = DefaultBaseEyeHeight;
-	CharacterCameraComponent->RelativeLocation = FVector(0, 0, DefaultBaseEyeHeight); // Position the camera
-	CharacterCameraComponent->bUsePawnControlRotation = true;
+	//CharacterCameraComponent->RelativeLocation = FVector(0, 0, DefaultBaseEyeHeight); // Position the camera
+	//CharacterCameraComponent->bUsePawnControlRotation = true;
 
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("PawnMesh1P"));
-	Mesh1P->AttachParent = CharacterCameraComponent;
+	Mesh1P->AttachParent = GetCapsuleComponent();
 	Mesh1P->SetOnlyOwnerSee(true);
 	/*Mesh1P->bOwnerNoSee = false;*/
 	Mesh1P->bCastDynamicShadow = false;
@@ -175,12 +175,18 @@ void ANimModCharacter::BeginPlay()
 	{
 		Health = HealthMax;
 	}*/
-	CharacterCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, DefaultBaseEyeHeight), false);
+	/*CharacterCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, DefaultBaseEyeHeight), false);
 	if (CharacterCameraComponent->RelativeLocation.Size2D() > 0.0f)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s: CameraComponent shouldn't have X/Y translation!"), *GetName());
-	}
+	}*/
 	Super::BeginPlay();
+}
+
+void ANimModCharacter::SetPlayerDefaults()
+{
+	DestroyInventory();
+	SpawnDefaultInventory();
 }
 
 class ANimModPlayerController *ANimModCharacter::GetNimModPlayerController()
@@ -266,7 +272,13 @@ void ANimModCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRota
 	const FMatrix MeshRelativeToCamera = DefMeshLS * LeveledCameraLS.Inverse();
 	const FMatrix PitchedMesh = MeshRelativeToCamera * PitchedCameraLS;
 
-	Mesh1P->SetRelativeLocationAndRotation(PitchedMesh.GetOrigin(), PitchedMesh.Rotator());
+	FVector origin = PitchedMesh.GetOrigin();
+	if (bIsCrouched)
+	{
+		origin.Z = (-origin.Z - (DefaultBaseEyeHeight - DefMesh1P->RelativeLocation.Z));
+	}
+
+	Mesh1P->SetRelativeLocationAndRotation(origin, PitchedMesh.Rotator());
 }
 
 
@@ -1305,15 +1317,40 @@ void ANimModCharacter::Tick(float DeltaSeconds)
 		SetRunning(false, false);
 	}
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->HasHealthRegen())
+	if (MyPC)
 	{
-		if (this->Health < this->GetMaxHealth())
+		if (MyPC->HasHealthRegen())
 		{
-			this->Health += 5 * DeltaSeconds;
-			if (Health > this->GetMaxHealth())
+			if (this->Health < this->GetMaxHealth())
 			{
-				Health = this->GetMaxHealth();
+				this->Health += 5 * DeltaSeconds;
+				if (Health > this->GetMaxHealth())
+				{
+					Health = this->GetMaxHealth();
+				}
 			}
+		}
+		
+		if (MyPC->GetPlayerTeam() == NimModTeam::ASSASSINS)
+		{
+			//FName parameterName = TEXT("NimMod_Opacity");
+			//for (auto material : GetPawnMesh()->GetMaterials())
+			//{
+			//	if (material)
+			//	{
+			//		float TestValue; //not used but needed for GetScalarParameterValue call
+			//		if (material->GetScalarParameterValue(parameterName, TestValue))
+			//		{
+			//			UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(material);
+			//			if (!DynamicMaterial) //Is it already a UMaterialInstanceDynamic (ie we used it last tick)
+			//			{
+			//				continue;
+			//			}
+			//			DynamicMaterial->SetScalarParameterValue(parameterName, 0.25);
+			//			break;
+			//		}
+			//	}
+			//}
 		}
 	}
 

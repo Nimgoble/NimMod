@@ -12,4 +12,12 @@ UCLASS()
 class NIMMOD_API UNimModHUDLayoutWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+	void SetOwningHUD(class ANimModHUD *owningHUD){ OwningHUD = owningHUD; }
+	class ANimModHUD *GetOwningHUD();
+
+private:
+	UPROPERTY()
+	class ANimModHUD *OwningHUD;
 };

@@ -120,6 +120,4 @@ protected:
 
 	/** helper for scoring points */
 	void ScorePoints(int32 Points);
-	
-	
 };

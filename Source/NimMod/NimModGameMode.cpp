@@ -9,6 +9,17 @@
 #include "NimModPlayerState.h"
 #include "NimModTeamStart.h"
 #include "NimModSpectatorPawn.h"
+#include "VIPTrigger.h"
+#include "NimModRoundManager.h"
+#include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
+//#include "Runtime/Engine/Classes/Particles/ParticleEventManager.h"
+#include "Runtime/Engine/Classes/Lightmass/LightmassImportanceVolume.h"
+#include "Runtime/Engine/Classes/AI/Navigation/NavigationData.h"
+#include "Runtime/Engine/Classes/Engine/LevelStreaming.h"
+
+//#ifdef DEBUG
+#include "Developer/GameplayDebugger/Classes/GameplayDebuggingReplicator.h"
+//#endif
 
 ANimModGameMode::ANimModGameMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -60,9 +71,9 @@ TSubclassOf<AGameSession> ANimModGameMode::GetGameSessionClass() const
 	return ANimModGameSession::StaticClass();
 }
 
-void ANimModGameMode::DefaultTimer()
-{
-	Super::DefaultTimer();
+//void ANimModGameMode::DefaultTimer()
+//{
+//	Super::DefaultTimer();
 
 	// don't update timers for Play In Editor mode, it's not real match
 	//if (GetWorld()->IsPlayInEditor())
@@ -112,7 +123,7 @@ void ANimModGameMode::DefaultTimer()
 	//		}
 	//	}
 	//}
-}
+//}
 
 void ANimModGameMode::HandleMatchIsWaitingToStart()
 {
@@ -257,6 +268,7 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 	if (NewPC /*&& NewPC->GetPawn() == NULL*/)
 	{
 		NewPC->ClientSetSpectatorCamera(NewPC->GetSpawnLocation(), NewPC->GetControlRotation());
+		NewPC->StartSpectating();
 		NewPC->ClientPutInServer();
 		//NewPC->OnShowTeamMenu();
 	}
@@ -269,7 +281,7 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-bool ANimModGameMode::PlayerCanRestart(APlayerController* Player)
+bool ANimModGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 {
 	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(Player);
 	if (NewPC)
@@ -278,24 +290,40 @@ bool ANimModGameMode::PlayerCanRestart(APlayerController* Player)
 			return false;
 	}
 
-	return Super::PlayerCanRestart(Player);
+	return Super::PlayerCanRestart_Implementation(Player);
 }
 
 void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APawn* KilledPawn, const UDamageType* DamageType)
 {
+	//TODO: If this is a spectator that is killing himself to join a team, return.
+
 	ANimModPlayerState* KillerPlayerState = Killer ? Cast<ANimModPlayerState>(Killer->PlayerState) : NULL;
 	ANimModPlayerState* VictimPlayerState = KilledPlayer ? Cast<ANimModPlayerState>(KilledPlayer->PlayerState) : NULL;
+	bool isVIPKill = (VictimPlayerState == NULL) ? false : VictimPlayerState->GetTeam() == NimModTeam::VIP;
+	int32 score = (isVIPKill) ? 10 : 1;
+
+	ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
 
 	if (KillerPlayerState && KillerPlayerState != VictimPlayerState)
 	{
 		KillerPlayerState->ScoreKill(VictimPlayerState, KillScore);
 		KillerPlayerState->InformAboutKill(KillerPlayerState, DamageType, VictimPlayerState);
+		int32 teamIndex = ((int32)KillerPlayerState->GetTeam());
+		gameState->TeamScores[teamIndex] += score;
 	}
 
 	if (VictimPlayerState)
 	{
 		VictimPlayerState->ScoreDeath(KillerPlayerState, DeathScore);
 		VictimPlayerState->BroadcastDeath(KillerPlayerState, DamageType, VictimPlayerState);
+		int32 teamIndex = ((int32)VictimPlayerState->GetTeam());
+		gameState->TeamScores[teamIndex] -= score;
+	}
+
+	if (isVIPKill && CurrentRoundManager != nullptr)
+	{
+		//TODO: Inform the players of the VIP's death and restart the round.
+		CurrentRoundManager->VIPKilled();
 	}
 }
 
@@ -327,6 +355,25 @@ float ANimModGameMode::ModifyDamage(float Damage, AActor* DamagedActor, struct F
 
 bool ANimModGameMode::CanDealDamage(class ANimModPlayerState* DamageInstigator, class ANimModPlayerState* DamagedPlayer) const
 {
+	NimModTeam instigatorTeam = DamageInstigator->GetTeam();
+	NimModTeam damagedTeam = DamagedPlayer->GetTeam();
+
+	//Can't damage or be damaged by spectators
+	if (instigatorTeam == NimModTeam::SPECTATORS || damagedTeam == NimModTeam::SPECTATORS)
+		return false;
+
+	//Can't damage your own team
+	if (instigatorTeam == damagedTeam)
+		return false;
+
+	//VIP and Bodyguards can't damage each other
+	if
+	(
+		(instigatorTeam == NimModTeam::BODYGUARDS && damagedTeam == NimModTeam::VIP) ||
+		(instigatorTeam == NimModTeam::VIP && damagedTeam == NimModTeam::BODYGUARDS)
+	)
+		return false;
+
 	return true;
 }
 
@@ -340,25 +387,25 @@ bool ANimModGameMode::ShouldSpawnAtStartSpot(AController* Player)
 	return false;
 }
 
-UClass* ANimModGameMode::GetDefaultPawnClassForController(AController* InController)
+UClass* ANimModGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
 	/*if (Cast<ANimModAIController>(InController))
 	{
 		return BotPawnClass;
 	}*/
 
-	return Super::GetDefaultPawnClassForController(InController);
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
-AActor* ANimModGameMode::ChoosePlayerStart(AController* Player)
+AActor* ANimModGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
 	TArray<APlayerStart*> PreferredSpawns;
 	TArray<APlayerStart*> FallbackSpawns;
 
 	APlayerStart* BestStart = NULL;
-	for (int32 i = 0; i < PlayerStarts.Num(); i++)
+	for (TActorIterator<APlayerStart> playerStartIter = TActorIterator<APlayerStart>(GetWorld()); playerStartIter; ++playerStartIter)
 	{
-		APlayerStart* TestSpawn = PlayerStarts[i];
+		APlayerStart* TestSpawn = *playerStartIter;
 		if (Cast<APlayerStartPIE>(TestSpawn) != NULL)
 		{
 			// Always prefer the first "Play from Here" PlayerStart, if we find one while in PIE mode
@@ -394,7 +441,7 @@ AActor* ANimModGameMode::ChoosePlayerStart(AController* Player)
 		}
 	}
 
-	return BestStart ? BestStart : Super::ChoosePlayerStart(Player);
+	return BestStart ? BestStart : Super::ChoosePlayerStart_Implementation(Player);
 }
 
 bool ANimModGameMode::IsSpawnpointAllowed(APlayerStart* SpawnPoint, AController* Player) const
@@ -479,63 +526,92 @@ void ANimModGameMode::RestartGame()
 	Super::RestartGame();
 }
 
-bool ANimModGameMode::ShouldReset(AActor* ActorToReset)
+/** Does end of game handling for the online layer */
+void ANimModGameMode::RestartPlayer(class AController* NewPlayer)
 {
-	return true;
-}
-
-/** Resets level by calling Reset() on all actors */
-void ANimModGameMode::ResetLevel()
-{
-	if (!ISSERVER)
-		return;
-	//Players should already be frozen
-	//FreezePlayers();
-
-	//Reset the level
-	Super::ResetLevel();
-
-	//Unfreeze the players.
-	UnfreezePlayers();
-}
-
-void ANimModGameMode::FreezePlayers()
-{
-	if (!ISSERVER)
-		return;
-
-	//Freeze the players
-	UWorld *world = GetWorld();
-	if (!world)
-		return;
-
-	for (FConstControllerIterator Iterator = world->GetControllerIterator(); Iterator; ++Iterator)
+	if (NewPlayer == NULL || NewPlayer->IsPendingKillPending())
 	{
-		AController* Controller = *Iterator;
-		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
-		if (PlayerController)
+		return;
+	}
+
+	UE_LOG(LogNimMod, Verbose, TEXT("RestartPlayer %s"), (NewPlayer && NewPlayer->PlayerState) ? *NewPlayer->PlayerState->PlayerName : TEXT("Unknown"));
+
+	if (NewPlayer->PlayerState && NewPlayer->PlayerState->bOnlySpectator)
+	{
+		UE_LOG(LogNimMod, Verbose, TEXT("RestartPlayer tried to restart a spectator-only player!"));
+		return;
+	}
+
+	AActor* StartSpot = FindPlayerStart(NewPlayer);
+
+	// if a start spot wasn't found,
+	if (StartSpot == NULL)
+	{
+		// check for a previously assigned spot
+		if (NewPlayer->StartSpot != NULL)
 		{
-			PlayerController->SetIgnoreMoveInput(true);
-			PlayerController->SetIgnoreLookInput(true);
+			StartSpot = NewPlayer->StartSpot.Get();
+			UE_LOG(LogNimMod, Warning, TEXT("Player start not found, using last start spot"));
+		}
+		else
+		{
+			// otherwise abort
+			UE_LOG(LogNimMod, Warning, TEXT("Player start not found, failed to restart player"));
+			return;
 		}
 	}
-}
-
-void ANimModGameMode::UnfreezePlayers()
-{
-	if (!ISSERVER)
-		return;
-
-	//Unfreeze the players
-	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+	// try to create a pawn to use of the default class for this player
+	if (NewPlayer->GetPawn() == NULL && GetDefaultPawnClassForController_Implementation(NewPlayer) != NULL)
 	{
-		AController* Controller = *Iterator;
-		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
-		if (PlayerController)
+		NewPlayer->SetPawn(SpawnDefaultPawnFor(NewPlayer, StartSpot));
+	}
+
+	if (NewPlayer->GetPawn() == NULL)
+	{
+		NewPlayer->FailedToSpawnPawn();
+	}
+	else
+	{
+		// initialize and start it up
+		InitStartSpot(StartSpot, NewPlayer);
+		NewPlayer->GetPawn()->TeleportTo(StartSpot->GetActorLocation(), StartSpot->GetActorRotation());
+
+		// @todo: this was related to speedhack code, which is disabled.
+		/*
+		if ( NewPlayer->GetAPlayerController() )
 		{
-			PlayerController->SetIgnoreMoveInput(false);
-			PlayerController->SetIgnoreLookInput(false);
+		NewPlayer->GetAPlayerController()->TimeMargin = -0.1f;
+		}
+		*/
+		NewPlayer->Possess(NewPlayer->GetPawn());
+
+		// If the Pawn is destroyed as part of possession we have to abort
+		if (NewPlayer->GetPawn() == nullptr)
+		{
+			NewPlayer->FailedToSpawnPawn();
+		}
+		else
+		{
+			// set initial control rotation to player start's rotation
+			NewPlayer->ClientSetRotation(NewPlayer->GetPawn()->GetActorRotation(), true);
+
+			FRotator NewControllerRot = StartSpot->GetActorRotation();
+			NewControllerRot.Roll = 0.f;
+			NewPlayer->SetControlRotation(NewControllerRot);
+
+			SetPlayerDefaults(NewPlayer->GetPawn());
 		}
 	}
-}
 
+#if !UE_WITH_PHYSICS
+	if (NewPlayer->GetPawn() != NULL)
+	{
+		UCharacterMovementComponent* CharacterMovement = Cast<UCharacterMovementComponent>(NewPlayer->GetPawn()->GetMovementComponent());
+		if (CharacterMovement)
+		{
+			CharacterMovement->bCheatFlying = true;
+			CharacterMovement->SetMovementMode(MOVE_Flying);
+		}
+	}
+#endif	//!UE_WITH_PHYSICS
+}

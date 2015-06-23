@@ -695,6 +695,11 @@ void ANimModPlayerController::ClientEndOnlineGame_Implementation()
 	}
 }
 
+void ANimModPlayerController::ClientRestartRound_Implementation()
+{
+	UnFreeze();
+}
+
 void ANimModPlayerController::HandleReturnToMainMenu()
 {
 	OnHideScoreboard();
@@ -940,17 +945,17 @@ void ANimModPlayerController::ToggleChatWindow()
 
 void ANimModPlayerController::ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime)
 {
-	/*ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
+	ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
 	if (NimModHUD)
 	{
 		if (Type == ServerSayString)
 		{
 			if (SenderPlayerState != PlayerState)
 			{
-				NimModHUD->AddChatLine(S, false);
+				//NimModHUD->AddChatLine(S, false);
 			}
 		}
-	}*/
+	}
 }
 
 void ANimModPlayerController::Say(const FString& Msg)

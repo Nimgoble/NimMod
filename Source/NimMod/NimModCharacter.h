@@ -33,6 +33,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+	/** Make sure pawn properties are back to default. */
+	virtual void SetPlayerDefaults();
+
 	class ANimModPlayerController *GetNimModPlayerController();
 
 	/**
@@ -283,8 +286,8 @@ public:
 	float BaseEyeHeight;*/
 
 	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	class UCameraComponent* CharacterCameraComponent;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	class UCameraComponent* CharacterCameraComponent;*/
 private:
 
 	/** pawn mesh: 1st person view */

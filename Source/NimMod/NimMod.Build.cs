@@ -6,16 +6,6 @@ public class NimMod : ModuleRules
 {
 	public NimMod(TargetInfo Target)
 	{
-        //PrivateIncludePaths.AddRange(
-        //    new string[] { 
-        //        "ShooterGame/Classes/Player",
-        //        "ShooterGame/Private",
-        //        "ShooterGame/Private/UI",
-        //        "ShooterGame/Private/UI/Menu",
-        //        "ShooterGame/Private/UI/Style",
-        //        "ShooterGame/Private/UI/Widgets",
-        //    }
-        //);
 
 		PublicDependencyModuleNames.AddRange
         (
@@ -37,9 +27,11 @@ public class NimMod : ModuleRules
         (
             new string[] 
             {
+                "CoreUObject",
 				"InputCore",
 				"Slate",
-				"SlateCore"/*,
+				"SlateCore",
+                "GameplayDebugger"/*,
 				"ShooterGameLoadingScreen",*/
 			}
         );

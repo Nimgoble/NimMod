@@ -30,6 +30,9 @@ public:
 	UFUNCTION(reliable, client)
 	void ClientEndOnlineGame();
 
+	UFUNCTION(reliable, client)
+	void ClientRestartRound();
+
 	/** notify player about finished match */
 	virtual void ClientGameEnded_Implementation(class AActor* EndGameFocus, bool bIsWinner);
 

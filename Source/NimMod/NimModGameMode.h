@@ -2,7 +2,10 @@
 #pragma once
 #include "GameFramework/GameMode.h"
 #include "NimModGameState.h"
+#include "Runtime/CoreUObject/Public/Serialization/ArchiveUObject.h"
 #include "NimModGameMode.generated.h"
+
+//class FReloadObjectArc;
 
 UCLASS(minimalapi)
 class ANimModGameMode : public AGameMode
@@ -22,16 +25,16 @@ public:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	/** @return true if it's valid to call RestartPlayer. Will call Player->CanRestartPlayer */
-	virtual bool PlayerCanRestart(APlayerController* Player);
+	bool PlayerCanRestart_Implementation(APlayerController* Player) override;
 
 	/** select best spawn point for player */
-	virtual AActor* ChoosePlayerStart(AController* Player) override;
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 
 	/** always pick new random spawn */
 	virtual bool ShouldSpawnAtStartSpot(AController* Player) override;
 
 	/** returns default pawn class for given controller */
-	virtual UClass* GetDefaultPawnClassForController(AController* InController) override;
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
 	/** prevents friendly fire */
 	virtual float ModifyDamage(float Damage, AActor* DamagedActor, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const;
@@ -46,7 +49,7 @@ public:
 	virtual bool AllowCheats(APlayerController* P) override;
 
 	/** update remaining time */
-	virtual void DefaultTimer() override;
+	//virtual void DefaultTimer() override;
 
 	/** called before startmatch */
 	virtual void HandleMatchIsWaitingToStart() override;
@@ -59,30 +62,32 @@ public:
 
 	ANimModGameState * GetGameState(){ return Cast<ANimModGameState>(GameState); }
 
+	void SetCurrentRoundManager(class ANimModRoundManager *roundManager) { CurrentRoundManager = roundManager; };
+
 protected:
 
 	/** delay between first player login and starting match */
 	UPROPERTY(config)
-		int32 WarmupTime;
+	int32 WarmupTime;
 
 	/** match duration */
 	UPROPERTY(config)
-		int32 RoundTime;
+	int32 RoundTime;
 
 	UPROPERTY(config)
-		int32 TimeBetweenMatches;
+	int32 TimeBetweenMatches;
 
 	/** score for kill */
 	UPROPERTY(config)
-		int32 KillScore;
+	int32 KillScore;
 
 	/** score for death */
 	UPROPERTY(config)
-		int32 DeathScore;
+	int32 DeathScore;
 
 	/** scale for self instigated damage */
 	UPROPERTY(config)
-		float DamageSelfScale;
+	float DamageSelfScale;
 
 	/** check who won */
 	virtual void DetermineMatchWinner();
@@ -99,20 +104,13 @@ protected:
 	/** Returns game session class to use */
 	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
 
+	UPROPERTY()
+	class ANimModRoundManager *CurrentRoundManager;
+
 public:
 
-	/**
-	* @return true if ActorToReset should have Reset() called on it while restarting the game,
-	*		   false if the GameMode will manually reset it or if the actor does not need to be reset
-	*/
-	virtual bool ShouldReset(AActor* ActorToReset);
-
-	/** Resets level by calling Reset() on all actors */
-	virtual void ResetLevel();
-
-	void FreezePlayers();
-
-	void UnfreezePlayers();
+	/** Does end of game handling for the online layer */
+	virtual void RestartPlayer(class AController* NewPlayer);
 
 	/** finish current match and lock players */
 	UFUNCTION(exec)
@@ -124,9 +122,6 @@ public:
 
 	/** get the name of the bots count option used in server travel URL */
 	static FString GetBotsCountOptionName();
-
-	/*UPROPERTY()
-		TArray<class ANimModPickup*> LevelPickups;*/
 };
 
 

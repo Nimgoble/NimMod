@@ -17,9 +17,7 @@ class NIMMOD_API AVIPTrigger : public APhysicsVolume
 public:
 	virtual void ActorEnteredVolume(class AActor* Other) override;
 
-private:
-	FTimerHandle restartHandle;
-
-	void RestartLevel();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Round)
+	class ANimModRoundManager *RoundManager;
 	
 };
