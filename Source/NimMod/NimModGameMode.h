@@ -62,8 +62,6 @@ public:
 
 	ANimModGameState * GetGameState(){ return Cast<ANimModGameState>(GameState); }
 
-	void SetCurrentRoundManager(class ANimModRoundManager *roundManager) { CurrentRoundManager = roundManager; };
-
 protected:
 
 	/** delay between first player login and starting match */
@@ -103,9 +101,6 @@ protected:
 
 	/** Returns game session class to use */
 	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
-
-	UPROPERTY()
-	class ANimModRoundManager *CurrentRoundManager;
 
 public:
 

@@ -87,4 +87,101 @@ void ANimModGameState::RequestFinishAndExitToMainMenu()
 
 }
 
+void ANimModGameState::VIPEscaped()
+{
+	TriggerRoundRestart();
+}
+
+void ANimModGameState::VIPKilled()
+{
+	TriggerRoundRestart();
+}
+
+void ANimModGameState::TriggerRoundRestart_Implementation()
+{
+	FreezePlayers();
+	GetWorld()->GetTimerManager().SetTimer(restartHandle, this, &ANimModGameState::OnRestartTimerExpired, 3.0f);
+}
+
+void ANimModGameState::OnRestartTimerExpired()
+{
+	GetWorld()->GetTimerManager().ClearTimer(restartHandle);
+	RestartRound();
+}
+
+void ANimModGameState::SendClientsMessage(FString message)
+{
+#if WITH_SERVER_CODE
+	UWorld *world = GetWorld();
+	if (!world)
+		return;
+
+	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+	{
+		AController* Controller = *Iterator;
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->ClientMessage(message, NAME_None, 3.0f);
+		}
+	}
+#endif
+}
+
+void ANimModGameState::RestartRound_Implementation()
+{
+	UWorld *world = GetWorld();
+	if (world != nullptr)
+	{
+		originalMapName = world->GetCurrentLevel()->GetOutermost()->GetName();
+		if (GetWorld()->IsPlayInEditor())
+		{
+			FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(world);
+			originalMapName = world->StripPIEPrefixFromPackageName(originalMapName, world->BuildPIEPackagePrefix(WorldContext.PIEInstance));
+		}
+		world->SeamlessTravel(originalMapName);
+	}
+	
+}
+
+void ANimModGameState::FreezePlayers_Implementation()
+{
+	/*if (!ISSERVER)
+	return;*/
+
+	//Freeze the players
+	UWorld *world = GetWorld();
+	if (!world)
+		return;
+
+	for (FConstControllerIterator Iterator = world->GetControllerIterator(); Iterator; ++Iterator)
+	{
+		AController* Controller = *Iterator;
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetIgnoreMoveInput(true);
+			PlayerController->SetIgnoreLookInput(true);
+		}
+	}
+}
+
+void ANimModGameState::UnfreezePlayers_Implementation()
+{
+	/*if (!ISSERVER)
+	return;*/
+
+	//Unfreeze the players
+	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+	{
+		AController* Controller = *Iterator;
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetIgnoreMoveInput(false);
+			PlayerController->SetIgnoreLookInput(false);
+		}
+	}
+}
+
 

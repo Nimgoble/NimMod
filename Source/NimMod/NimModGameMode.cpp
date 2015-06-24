@@ -320,10 +320,10 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 		gameState->TeamScores[teamIndex] -= score;
 	}
 
-	if (isVIPKill && CurrentRoundManager != nullptr)
+	if (isVIPKill)
 	{
 		//TODO: Inform the players of the VIP's death and restart the round.
-		CurrentRoundManager->VIPKilled();
+		gameState->VIPKilled();
 	}
 }
 

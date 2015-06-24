@@ -4,7 +4,7 @@
 #include "NimModRoundManager.generated.h"
 
 UCLASS(minimalapi)
-class ANimModRoundManager : public AActor
+class ANimModRoundManager : /*public AActor*/ public AInfo
 {
 	GENERATED_BODY()
 
@@ -13,6 +13,8 @@ public:
 	~ANimModRoundManager();
 
 	virtual void BeginPlay();
+
+	//virtual void BeginDestroy() override;
 
 	void VIPEscaped();
 

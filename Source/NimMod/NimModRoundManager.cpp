@@ -50,26 +50,44 @@ void ANimModRoundManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetWorld() != nullptr)
+	UWorld *world = GetWorld();
+	if (world != nullptr)
 	{
-		originalMapName = GetWorld()->GetCurrentLevel()->GetOutermost()->GetName();
+		originalMapName = world->GetCurrentLevel()->GetOutermost()->GetName();
 		if (GetWorld()->IsPlayInEditor())
 		{
-			FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(GetWorld());
-			originalMapName = GetWorld()->StripPIEPrefixFromPackageName(originalMapName, GetWorld()->BuildPIEPackagePrefix(WorldContext.PIEInstance));
+			FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(world);
+			originalMapName = world->StripPIEPrefixFromPackageName(originalMapName, world->BuildPIEPackagePrefix(WorldContext.PIEInstance));
 		}
-		AGameMode *genericGameMode = GetWorld()->GetAuthGameMode();
+		/*AGameMode *genericGameMode = world->GetAuthGameMode();
 		if (genericGameMode == nullptr)
 			return;
 
 		ANimModGameMode *gameMode = Cast<ANimModGameMode>(genericGameMode);
 		if (gameMode)
-			gameMode->SetCurrentRoundManager(this);
+			gameMode->SetCurrentRoundManager(this);*/
 	}
 
 	//InitializeRoundObjects_OverwriteWithArchive();
 	//InitializeRoundObjects_ForceRespawn();
 }
+
+//void ANimModRoundManager::BeginDestroy()
+//{
+//	/*UWorld *world = GetWorld();
+//	if (world != nullptr)
+//	{
+//		AGameMode *genericGameMode = world->GetAuthGameMode();
+//		if (genericGameMode == nullptr)
+//			return;
+//
+//		ANimModGameMode *gameMode = Cast<ANimModGameMode>(genericGameMode);
+//		if (gameMode)
+//			gameMode->SetCurrentRoundManager(nullptr);
+//	}*/
+//
+//	Super::BeginDestroy();
+//}
 
 void ANimModRoundManager::VIPEscaped()
 {

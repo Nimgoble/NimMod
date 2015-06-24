@@ -37,6 +37,32 @@ public:
 	//void GetRankedMap(int32 TeamIndex, RankedPlayerMap& OutRankedMap) const;
 
 	void RequestFinishAndExitToMainMenu();
-	
-	
+
+	void VIPEscaped();
+
+	void VIPKilled();
+
+private:
+	FTimerHandle restartHandle;
+
+	UFUNCTION(Reliable, NetMulticast)
+	void TriggerRoundRestart();
+
+	UFUNCTION()
+	void OnRestartTimerExpired();
+
+	void SendClientsMessage(FString message);
+
+	//UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Reliable, NetMulticast)
+	void RestartRound();
+
+	UFUNCTION(Reliable, NetMulticast)
+	void FreezePlayers();
+
+	UFUNCTION(Reliable, NetMulticast)
+	void UnfreezePlayers();
+
+	UPROPERTY(Transient, Replicated)
+	FString originalMapName;
 };
