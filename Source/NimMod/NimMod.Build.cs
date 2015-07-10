@@ -14,12 +14,17 @@ public class NimMod : ModuleRules
                 "Core",
 				"CoreUObject",
 				"Engine",
+                "Networking",
+                "Sockets",
 				"OnlineSubsystem",
 				"OnlineSubsystemUtils",
 				"AssetRegistry",
                 "AIModule",
                 "InputCore",
-                "UMG"
+                "UMG",
+                "HTTP",
+                "Json",
+                "VaRestPlugin"
             }
         );
 
@@ -29,9 +34,16 @@ public class NimMod : ModuleRules
             {
                 "CoreUObject",
 				"InputCore",
+                "Networking",
+                "Sockets",
+				"OnlineSubsystem",
+				"OnlineSubsystemUtils",
 				"Slate",
 				"SlateCore",
-                "GameplayDebugger"/*,
+                "GameplayDebugger",
+                "HTTP",
+                "Json",
+                "VaRestPlugin"/*,
 				"ShooterGameLoadingScreen",*/
 			}
         );

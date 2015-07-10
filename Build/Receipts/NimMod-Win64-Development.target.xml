@@ -9,6 +9,7 @@
   <BuildProducts>
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\NimMod.exe" Type="Executable" />
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\NimMod.pdb" Type="SymbolFile" />
+    <BuildProduct Path="$(ProjectDir)\Plugins\VaRest\Binaries\Win64\UE4-VaRestPlugin.lib" Type="StaticLibrary" />
   </BuildProducts>
   <RuntimeDependencies>
     <RuntimeDependency Path="$(EngineDir)/Binaries/ThirdParty/PhysX/PhysX-3.3/Win64/VS2013/PhysX3PROFILE_x64.dll" />

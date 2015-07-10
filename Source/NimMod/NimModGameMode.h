@@ -3,6 +3,7 @@
 #include "GameFramework/GameMode.h"
 #include "NimModGameState.h"
 #include "Runtime/CoreUObject/Public/Serialization/ArchiveUObject.h"
+#include "Runtime/Online/HTTP/Public/Http.h"
 #include "NimModGameMode.generated.h"
 
 //class FReloadObjectArc;
@@ -23,6 +24,8 @@ public:
 
 	/** starts match warmup */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	virtual void Logout(AController* Exiting);
 
 	/** @return true if it's valid to call RestartPlayer. Will call Player->CanRestartPlayer */
 	bool PlayerCanRestart_Implementation(APlayerController* Player) override;
@@ -62,7 +65,19 @@ public:
 
 	ANimModGameState * GetGameState(){ return Cast<ANimModGameState>(GameState); }
 
+	/*UFUNCTION(BlueprintCallable, Category = "NimMod|Online")
+	void RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN);
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Online")
+	void UnRegisterServer();*/
+
 protected:
+
+	void UpdateServerPlayerCount();
+	/*UPROPERTY()
+	FString ServerIP;
+
+	bool GetServerIP();
+	void GetServerIPResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);*/
 
 	/** delay between first player login and starting match */
 	UPROPERTY(config)

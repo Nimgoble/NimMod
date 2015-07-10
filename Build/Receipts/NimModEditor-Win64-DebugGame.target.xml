@@ -7,6 +7,9 @@
     <Property Name="Precompile" Value="False" />
   </Properties>
   <BuildProducts>
+    <BuildProduct Path="$(ProjectDir)\Plugins\VaRest\Binaries\Win64\UE4Editor-VaRestPlugin-Win64-DebugGame.dll" Type="DynamicLibrary" />
+    <BuildProduct Path="$(ProjectDir)\Plugins\VaRest\Binaries\Win64\UE4Editor-VaRestPlugin-Win64-DebugGame.pdb" Type="SymbolFile" />
+    <BuildProduct Path="$(ProjectDir)\Plugins\VaRest\Intermediate\Build\Win64\UE4Editor\DebugGame\UE4Editor-VaRestPlugin-Win64-DebugGame.lib" Type="ImportLibrary" />
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-NimMod-Win64-DebugGame.dll" Type="DynamicLibrary" />
     <BuildProduct Path="$(ProjectDir)\Binaries\Win64\UE4Editor-NimMod-Win64-DebugGame.pdb" Type="SymbolFile" />
     <BuildProduct Path="$(ProjectDir)\Intermediate\Build\Win64\UE4Editor\DebugGame\UE4Editor-NimMod-Win64-DebugGame.lib" Type="ImportLibrary" />

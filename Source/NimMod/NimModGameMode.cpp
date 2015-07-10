@@ -11,6 +11,7 @@
 #include "NimModSpectatorPawn.h"
 #include "VIPTrigger.h"
 #include "NimModRoundManager.h"
+#include "NimModGameInstance.h"
 #include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
 //#include "Runtime/Engine/Classes/Particles/ParticleEventManager.h"
 #include "Runtime/Engine/Classes/Lightmass/LightmassImportanceVolume.h"
@@ -57,6 +58,7 @@ void ANimModGameMode::InitGame(const FString& MapName, const FString& Options, F
 {
 	/*const int32 BotsCountOptionValue = GetIntOption(Options, GetBotsCountOptionName(), 0);*/
 	Super::InitGame(MapName, Options, ErrorMessage);
+	//GetServerIP();
 
 	/*const UGameInstance* GI = GetGameInstance();
 	if (GI && Cast<UNimModInstance>(GI)->GetIsOnline())
@@ -279,6 +281,14 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 		NewPC->ClientGameStarted();
 		NewPC->ClientStartOnlineGame();
 	}
+
+	UpdateServerPlayerCount();
+}
+
+void ANimModGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+	UpdateServerPlayerCount();
 }
 
 bool ANimModGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
@@ -525,6 +535,89 @@ void ANimModGameMode::RestartGame()
 
 	Super::RestartGame();
 }
+
+void ANimModGameMode::UpdateServerPlayerCount()
+{
+	if (!HasAuthority())
+		return;
+	UNimModGameInstance *gameInstance = Cast<UNimModGameInstance>(GetGameInstance());
+	if (gameInstance)
+	{
+		gameInstance->UpdateServer(this->NumPlayers);
+	}
+}
+
+//void ANimModGameMode::RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN)
+//{
+//	//We don't register LAN servers with the master server.
+//	if (isLAN)
+//		return;
+//
+//	if (GameSession != NULL && GetWorld()->GetNetMode() == NM_DedicatedServer)
+//	{
+//		ANimModGameSession* gameSession = Cast<ANimModGameSession>(GameSession);
+//		if (gameSession)
+//		{
+//			gameSession->RegisterNimModServer(ServerIP, serverName, mapName, maxNumberOfPlayers);
+//			/*FTimerHandle TempHandle;
+//			GetWorldTimerManager().SetTimer(TempHandle, this, &AUTGameMode::UpdateOnlineServer, 60.0f);
+//
+//			if (UTGameSession->bSessionValid)
+//			{
+//				NotifyLobbyGameIsReady();
+//			}*/
+//		}
+//	}
+//}
+//
+//void ANimModGameMode::UnRegisterServer()
+//{
+//	if (GameSession != NULL && GetWorld()->GetNetMode() == NM_DedicatedServer)
+//	{
+//		ANimModGameSession* gameSession = Cast<ANimModGameSession>(GameSession);
+//		if (gameSession)
+//		{
+//			gameSession->UnRegisterServer();
+//		}
+//	}
+//}
+//
+/////RAMA
+//bool ANimModGameMode::GetServerIP()
+//{
+//	FHttpModule* Http = &FHttpModule::Get();
+//
+//	if (!Http)
+//	{
+//		return false;
+//	}
+//
+//	if (!Http->IsHttpEnabled())
+//	{
+//		return false;
+//	}
+//	//~~~~~~~~~~~~~~~~~~~
+//
+//	FString TargetHost = "http://api.ipify.org";
+//	TSharedRef < IHttpRequest > Request = Http->CreateRequest();
+//	Request->SetVerb("GET");
+//	Request->SetURL(TargetHost);
+//	Request->SetHeader("User-Agent", "NimMod/1.0");
+//	Request->SetHeader("Content-Type", "text/html");
+//
+//	Request->OnProcessRequestComplete().BindUObject(this, &ANimModGameMode::GetServerIPResponseReceived);
+//	if (!Request->ProcessRequest())
+//	{
+//		return false;
+//	}
+//
+//	return true;
+//}
+//
+//void ANimModGameMode::GetServerIPResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+//{
+//	ServerIP = Response->GetContentAsString();
+//}
 
 /** Does end of game handling for the online layer */
 void ANimModGameMode::RestartPlayer(class AController* NewPlayer)
