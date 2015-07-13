@@ -76,6 +76,41 @@ enum class NimModTeam : uint8
 	VIP UMETA(DisplayName = "VIP")
 };
 
+UENUM(BlueprintType)
+enum class ENimModHUDMessageType : uint8
+{
+	PublicChat UMETA(DisplayName = "Public Chat"),
+	TeamChat UMETA(DisplayName = "Team Chat"),
+	ServerMessage UMETA(DisplayName = "Server Message"),
+	MarqueeMessage UMETA(DisplayName = "Marquee Message")
+};
+
+USTRUCT(blueprintable, meta = (DisplayName = "NimMod HUD Message"))
+struct FNimModHUDMessage
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|HUD")
+	ENimModHUDMessageType MessageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|HUD")
+	class ANimModPlayerState *Sender;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|HUD")
+	FString Message;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|HUD")
+	bool TeamOnly;
+
+	FNimModHUDMessage()
+	{
+		Message = TEXT("");
+		TeamOnly = false;
+		Sender = nullptr;
+		MessageType = ENimModHUDMessageType::MarqueeMessage;
+	}
+};
+
 #define NIMMOD_SURFACE_Default		SurfaceType_Default
 #define NIMMOD_SURFACE_Concrete	SurfaceType1
 #define NIMMOD_SURFACE_Dirt		SurfaceType2

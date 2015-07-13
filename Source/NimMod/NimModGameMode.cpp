@@ -547,6 +547,28 @@ void ANimModGameMode::UpdateServerPlayerCount()
 	}
 }
 
+void ANimModGameMode::BroadcastHUDMessage(ANimModPlayerController *controller, FNimModHUDMessage message)
+{
+	for (FConstControllerIterator It = GetWorld()->GetControllerIterator(); It; ++It)
+	{
+		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(*It);
+
+		if (PlayerController)
+		{
+			if (PlayerController == controller)
+				continue;
+
+			if (message.MessageType == ENimModHUDMessageType::TeamChat)
+			{
+				if (message.Sender != nullptr && PlayerController->GetPlayerTeam() == message.Sender->GetTeam())
+					PlayerController->ClientHUDMessage(message);
+			}
+			else
+				PlayerController->ClientHUDMessage(message);
+		}
+	}
+}
+
 //void ANimModGameMode::RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN)
 //{
 //	//We don't register LAN servers with the master server.

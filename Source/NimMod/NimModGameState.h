@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameState.h"
+#include "NimModTypes.h"
 #include "NimModGameState.generated.h"
 
 /**

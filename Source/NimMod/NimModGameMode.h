@@ -2,6 +2,7 @@
 #pragma once
 #include "GameFramework/GameMode.h"
 #include "NimModGameState.h"
+#include "NimModTypes.h"
 #include "Runtime/CoreUObject/Public/Serialization/ArchiveUObject.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "NimModGameMode.generated.h"
@@ -69,6 +70,8 @@ public:
 	void RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN);
 	UFUNCTION(BlueprintCallable, Category = "NimMod|Online")
 	void UnRegisterServer();*/
+
+	void BroadcastHUDMessage(class ANimModPlayerController *controller, FNimModHUDMessage message);
 
 protected:
 

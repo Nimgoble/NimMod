@@ -49,10 +49,27 @@ public:
 	void ServerCheat(const FString& Msg);
 
 	/* Overriden Message implementation. */
-	virtual void ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime) override;
+	//virtual void ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime) override;
+
+	UFUNCTION(Reliable, Client)
+	void ClientHUDMessage(const FNimModHUDMessage &message);
+	//void ClientHUDMessage_Implementation(const FNimModHUDMessage &message);
+
+	void SendHUDMessage(const FNimModHUDMessage &message);
+
+	UFUNCTION(unreliable, server, WithValidation)
+	void ServerHUDMessage(const FNimModHUDMessage &message);
+	/*bool ServerHUDMessage_Validate(const FNimModHUDMessage &message);
+	void ServerHUDMessage_Implementation(const FNimModHUDMessage &message);*/
 
 	/* Tell the HUD to toggle the chat window. */
+
+	void ToggleChatWindow(bool teamChat);
+
+	template<bool IsTeamChat>
 	void ToggleChatWindow();
+
+	void CommitChatMessage();
 
 	/** Local function say a string */
 	UFUNCTION(exec)
@@ -193,13 +210,16 @@ public:
 	void UpdateAchievementProgress(const FString& Id, float Percent);
 
 	/** Returns a pointer to the shooter game hud. May return NULL. */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	ANimModHUD* GetNimModHUD() const;
 
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	ANimModPlayerState *GetNimModPlayerState() const;
 
 	/** Returns the persistent user record associated with this player, or null if there is't one. */
 	class UNimModPersistentUser* GetPersistentUser() const;
 
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	class ANimModCharacter *GetNimModCharacter() const;
 
 	/** Informs that player fragged someone */

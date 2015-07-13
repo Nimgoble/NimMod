@@ -23,6 +23,14 @@ public:
 
 	virtual void PostInitializeComponents();
 
+	void CommitChatMessage();
+	void HandleHUDMessage(const FNimModHUDMessage &message);
+	void HandleToggleChat(bool isTeamChat);
+	void HandleRoundRestarting();
+
+	//class UNimModHUDLayoutWidget *GetLayoutWidget();
+
+
 private:
 	/** Crosshair asset pointer */
 	class UTexture2D* CrosshairTex;

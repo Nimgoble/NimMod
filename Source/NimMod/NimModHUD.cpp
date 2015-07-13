@@ -55,4 +55,25 @@ void ANimModHUD::DrawHUD()
 	TileItem.BlendMode = SE_BLEND_Translucent;
 	Canvas->DrawItem( TileItem );
 }
+void ANimModHUD::CommitChatMessage()
+{
+	if (layoutWidget != nullptr)
+		layoutWidget->HandleCommitChatMessage();
+}
+void ANimModHUD::HandleHUDMessage(const FNimModHUDMessage &message)
+{
+	if (layoutWidget != nullptr)
+		layoutWidget->HandleHUDMessage(message);
+}
+void ANimModHUD::HandleToggleChat(bool isTeamChat)
+{
+	if (layoutWidget != nullptr)
+		layoutWidget->HandleToggleChat(isTeamChat);
+}
+
+void ANimModHUD::HandleRoundRestarting()
+{
+	if (layoutWidget != nullptr)
+		layoutWidget->HandleRoundRestarting();
+}
 

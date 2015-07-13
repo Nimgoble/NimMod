@@ -10,6 +10,7 @@
 #include "NimModPlayerState.h"
 #include "NimModLocalPlayer.h"
 #include "NimModGameViewportClient.h"
+#include "NimModGameMode.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Online.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Interfaces/OnlineAchievementsInterface.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Interfaces/OnlineEventsInterface.h"
@@ -76,7 +77,9 @@ void ANimModPlayerController::SetupInputComponent()
 	InputComponent->BindAction("PushToTalk", IE_Pressed, this, &APlayerController::StartTalking);
 	InputComponent->BindAction("PushToTalk", IE_Released, this, &APlayerController::StopTalking);
 
-	InputComponent->BindAction("ToggleChat", IE_Pressed, this, &ANimModPlayerController::ToggleChatWindow);
+	InputComponent->BindAction("ToggleChat", IE_Pressed, this, &ANimModPlayerController::ToggleChatWindow<false>);
+	InputComponent->BindAction("ToggleTeamChat", IE_Pressed, this, &ANimModPlayerController::ToggleChatWindow<true>);
+	InputComponent->BindAction("CommitChatMessage", IE_Pressed, this, &ANimModPlayerController::CommitChatMessage);
 
 	InputComponent->BindAction("SpecNext", IE_Pressed, this, &ANimModPlayerController::SpecNext).bConsumeInput = false;
 	InputComponent->BindAction("SpecPrev", IE_Pressed, this, &ANimModPlayerController::SpecPrev).bConsumeInput = false;
@@ -697,7 +700,8 @@ void ANimModPlayerController::ClientEndOnlineGame_Implementation()
 
 void ANimModPlayerController::ClientRestartRound_Implementation()
 {
-	UnFreeze();
+	GetNimModHUD()->HandleRoundRestarting();
+	//UnFreeze();
 }
 
 void ANimModPlayerController::HandleReturnToMainMenu()
@@ -934,28 +938,62 @@ bool ANimModPlayerController::IsGameInputAllowed() const
 	return bAllowGameActions && !bCinematicMode;
 }
 
-void ANimModPlayerController::ToggleChatWindow()
+void ANimModPlayerController::ToggleChatWindow(bool teamChat)
 {
-	/*ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
-	if (NimModHUD)
-	{
-		NimModHUD->ToggleChat();
-	}*/
+	GetNimModHUD()->HandleToggleChat(teamChat);
 }
 
-void ANimModPlayerController::ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime)
+template<bool IsTeamChat>
+void ANimModPlayerController::ToggleChatWindow()
 {
-	ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
-	if (NimModHUD)
-	{
-		if (Type == ServerSayString)
-		{
-			if (SenderPlayerState != PlayerState)
-			{
-				//NimModHUD->AddChatLine(S, false);
-			}
-		}
-	}
+	ToggleChatWindow(IsTeamChat);
+}
+
+void ANimModPlayerController::CommitChatMessage()
+{
+	GetNimModHUD()->CommitChatMessage();
+}
+
+//void ANimModPlayerController::ToggleChatWindow()
+//{
+//	/*ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
+//	if (NimModHUD)
+//	{
+//		NimModHUD->ToggleChat();
+//	}*/
+//}
+
+//void ANimModPlayerController::ClientTeamMessage_Implementation(APlayerState* SenderPlayerState, const FString& S, FName Type, float MsgLifeTime)
+//{
+//	FString SMod = S;
+//	static FName NAME_Say = FName(TEXT("Say"));
+//	if ((Type == NAME_Say) && (SenderPlayerState != NULL))
+//	{
+//		SMod = FString::Printf(TEXT("%s: %s"), *SenderPlayerState->PlayerName, *SMod);
+//	}
+//
+//	// since this is on the client, we can assume that if Player exists, it is a LocalPlayer
+//	/*if (Player != NULL && CastChecked<ULocalPlayer>(Player)->ViewportClient->ViewportConsole)
+//	{
+//		CastChecked<ULocalPlayer>(Player)->ViewportClient->ViewportConsole->OutputText(SMod);
+//	}*/
+//
+//	ANimModHUD* NimModHUD = Cast<ANimModHUD>(GetHUD());
+//	if (NimModHUD)
+//	{
+//		if (Type == ServerSayString)
+//		{
+//			if (SenderPlayerState != PlayerState)
+//			{
+//				//NimModHUD->AddChatLine(S, false);
+//			}
+//		}
+//	}
+//}
+
+void ANimModPlayerController::ClientHUDMessage_Implementation(const FNimModHUDMessage &message)
+{
+	GetNimModHUD()->HandleHUDMessage(message);
 }
 
 void ANimModPlayerController::Say(const FString& Msg)
@@ -971,6 +1009,23 @@ bool ANimModPlayerController::ServerSay_Validate(const FString& Msg)
 void ANimModPlayerController::ServerSay_Implementation(const FString& Msg)
 {
 	GetWorld()->GetAuthGameMode()->Broadcast(this, Msg, ServerSayString);
+}
+
+void ANimModPlayerController::SendHUDMessage(const FNimModHUDMessage &message)
+{
+	ServerHUDMessage(message);
+}
+
+bool ANimModPlayerController::ServerHUDMessage_Validate(const FNimModHUDMessage &message)
+{
+	return true;
+}
+
+void ANimModPlayerController::ServerHUDMessage_Implementation(const FNimModHUDMessage &message)
+{
+	ANimModGameMode *gameMode = Cast<ANimModGameMode>(GetWorld()->GetAuthGameMode());
+	if (gameMode)
+		gameMode->BroadcastHUDMessage(this, message);
 }
 
 ANimModHUD* ANimModPlayerController::GetNimModHUD() const

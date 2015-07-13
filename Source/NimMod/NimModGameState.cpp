@@ -89,11 +89,13 @@ void ANimModGameState::RequestFinishAndExitToMainMenu()
 
 void ANimModGameState::VIPEscaped()
 {
+	SendClientsMessage("The VIP has escaped!");
 	TriggerRoundRestart();
 }
 
 void ANimModGameState::VIPKilled()
 {
+	SendClientsMessage("The VIP has been assassinated!");
 	TriggerRoundRestart();
 }
 
@@ -106,26 +108,51 @@ void ANimModGameState::TriggerRoundRestart_Implementation()
 void ANimModGameState::OnRestartTimerExpired()
 {
 	GetWorld()->GetTimerManager().ClearTimer(restartHandle);
+	UWorld *world = GetWorld();
+	if (world != nullptr)
+	{
+		for (FConstControllerIterator Iterator = world->GetControllerIterator(); Iterator; ++Iterator)
+		{
+			AController* Controller = *Iterator;
+			ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+			if (PlayerController)
+				PlayerController->ClientRestartRound();
+		}
+	}
+
 	RestartRound();
 }
 
 void ANimModGameState::SendClientsMessage(FString message)
 {
-#if WITH_SERVER_CODE
-	UWorld *world = GetWorld();
-	if (!world)
-		return;
-
-	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+	if (AuthorityGameMode)
 	{
-		AController* Controller = *Iterator;
-		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
-		if (PlayerController)
+		// we are server, tell the gamemode
+		ANimModGameMode* const GameMode = Cast<ANimModGameMode>(AuthorityGameMode);
+		if (GameMode)
 		{
-			PlayerController->ClientMessage(message, NAME_None, 3.0f);
+			FNimModHUDMessage hudMessage;
+			hudMessage.MessageType = ENimModHUDMessageType::MarqueeMessage;
+			hudMessage.Message = message;
+			hudMessage.TeamOnly = false;
+			GameMode->BroadcastHUDMessage(nullptr, hudMessage);
 		}
 	}
-#endif
+//#if WITH_SERVER_CODE
+//	UWorld *world = GetWorld();
+//	if (!world)
+//		return;
+//
+//	for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+//	{
+//		AController* Controller = *Iterator;
+//		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
+//		if (PlayerController)
+//		{
+//			PlayerController->ClientMessage(message, NAME_None, 3.0f);
+//		}
+//	}
+//#endif
 }
 
 void ANimModGameState::RestartRound_Implementation()
