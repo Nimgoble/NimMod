@@ -6,7 +6,7 @@
 
 ANimModPlayerCameraManager::ANimModPlayerCameraManager(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	NormalFOV = 90.0f;
+	CurrentFOV = NormalFOV = 90.0f;
 	TargetingFOV = 60.0f;
 	ViewPitchMin = -87.0f;
 	ViewPitchMax = 87.0f;
@@ -18,8 +18,8 @@ void ANimModPlayerCameraManager::UpdateCamera(float DeltaTime)
 	ANimModCharacter* MyPawn = PCOwner ? Cast<ANimModCharacter>(PCOwner->GetPawn()) : NULL;
 	if (MyPawn && MyPawn->IsFirstPerson())
 	{
-		const float TargetFOV = MyPawn->IsTargeting() ? TargetingFOV : NormalFOV;
-		DefaultFOV = FMath::FInterpTo(DefaultFOV, TargetFOV, DeltaTime, 20.0f);
+		//const float TargetFOV = MyPawn->IsTargeting() ? TargetingFOV : NormalFOV;
+		DefaultFOV = CurrentFOV;//FMath::FInterpTo(DefaultFOV, TargetFOV, DeltaTime, 20.0f);
 	}
 
 	Super::UpdateCamera(DeltaTime);
@@ -28,4 +28,9 @@ void ANimModPlayerCameraManager::UpdateCamera(float DeltaTime)
 	{
 		MyPawn->OnCameraUpdate(GetCameraLocation(), GetCameraRotation());
 	}
+}
+
+void ANimModPlayerCameraManager::ResetFOV()
+{
+	CurrentFOV = NormalFOV;
 }

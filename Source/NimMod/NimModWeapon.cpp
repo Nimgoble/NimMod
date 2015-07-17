@@ -67,6 +67,7 @@ void ANimModWeapon::PostInitializeComponents()
 		CurrentAmmoInClip = WeaponConfig.AmmoPerClip;
 		CurrentAmmo = WeaponConfig.AmmoPerClip * WeaponConfig.InitialClips;
 	}
+	CurrentFireMode = WeaponConfig.FireModes.Num() > 0 ? WeaponConfig.FireModes[0] : ENimModFireMode::SemiAutomatic;
 
 	DetachMeshFromPawn();
 }
@@ -135,7 +136,8 @@ void ANimModWeapon::OnUnEquip()
 {
 	DetachMeshFromPawn();
 	bIsEquipped = false;
-	StopFire();
+	StopPrimaryFire();
+	StopSecondaryFire();
 
 	if (bPendingReload)
 	{
@@ -217,11 +219,12 @@ void ANimModWeapon::DetachMeshFromPawn()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void ANimModWeapon::StartFire()
+void ANimModWeapon::StartPrimaryFire()
 {
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModWeapon::StartPrimaryFire"));
 	if (Role < ROLE_Authority)
 	{
-		ServerStartFire();
+		ServerStartPrimaryFire();
 	}
 
 	if (!bWantsToFire)
@@ -229,13 +232,16 @@ void ANimModWeapon::StartFire()
 		bWantsToFire = true;
 		DetermineWeaponState();
 	}
+
+	OnStartPrimaryFire();
 }
 
-void ANimModWeapon::StopFire()
+void ANimModWeapon::StopPrimaryFire()
 {
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModWeapon::StopPrimaryFire"));
 	if (Role < ROLE_Authority)
 	{
-		ServerStopFire();
+		ServerStopPrimaryFire();
 	}
 
 	if (bWantsToFire)
@@ -243,6 +249,42 @@ void ANimModWeapon::StopFire()
 		bWantsToFire = false;
 		DetermineWeaponState();
 	}
+
+	OnStopPrimaryFire();
+}
+
+void ANimModWeapon::StartSecondaryFire()
+{
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModWeapon::StartPrimaryFire"));
+	if (Role < ROLE_Authority)
+	{
+		ServerStartSecondaryFire();
+	}
+
+	if (!bWantsToFire)
+	{
+		bWantsToFire = true;
+		DetermineWeaponState();
+	}
+
+	OnStartSecondaryFire();
+}
+
+void ANimModWeapon::StopSecondaryFire()
+{
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModWeapon::StopPrimaryFire"));
+	if (Role < ROLE_Authority)
+	{
+		ServerStopSecondaryFire();
+	}
+
+	if (bWantsToFire)
+	{
+		bWantsToFire = false;
+		DetermineWeaponState();
+	}
+
+	OnStopSecondaryFire();
 }
 
 void ANimModWeapon::StartReload(bool bFromReplication)
@@ -286,24 +328,44 @@ void ANimModWeapon::StopReload()
 	}
 }
 
-bool ANimModWeapon::ServerStartFire_Validate()
+bool ANimModWeapon::ServerStartPrimaryFire_Validate()
 {
 	return true;
 }
 
-void ANimModWeapon::ServerStartFire_Implementation()
+void ANimModWeapon::ServerStartPrimaryFire_Implementation()
 {
-	StartFire();
+	StartPrimaryFire();
 }
 
-bool ANimModWeapon::ServerStopFire_Validate()
+bool ANimModWeapon::ServerStartSecondaryFire_Validate()
 {
 	return true;
 }
 
-void ANimModWeapon::ServerStopFire_Implementation()
+void ANimModWeapon::ServerStartSecondaryFire_Implementation()
 {
-	StopFire();
+	StartSecondaryFire();
+}
+
+bool ANimModWeapon::ServerStopPrimaryFire_Validate()
+{
+	return true;
+}
+
+void ANimModWeapon::ServerStopPrimaryFire_Implementation()
+{
+	StopPrimaryFire();
+}
+
+bool ANimModWeapon::ServerStopSecondaryFire_Validate()
+{
+	return true;
+}
+
+void ANimModWeapon::ServerStopSecondaryFire_Implementation()
+{
+	StopSecondaryFire();
 }
 
 bool ANimModWeapon::ServerStartReload_Validate()
@@ -466,7 +528,12 @@ void ANimModWeapon::HandleFiring()
 		}
 
 		// setup refire timer
-		bRefiring = (CurrentState == EWeaponState::Firing && WeaponConfig.TimeBetweenShots > 0.0f);
+		bRefiring = 
+			(
+				CurrentState == EWeaponState::Firing && 
+				CurrentFireMode != ENimModFireMode::SemiAutomatic &&
+				WeaponConfig.TimeBetweenShots > 0.0f
+			);
 		if (bRefiring)
 		{
 			GetWorldTimerManager().SetTimer(TimerHandle_HandleFiring, this, &ANimModWeapon::HandleFiring, WeaponConfig.TimeBetweenShots, false);

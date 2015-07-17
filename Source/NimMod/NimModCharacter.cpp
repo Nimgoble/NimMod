@@ -275,7 +275,7 @@ void ANimModCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRota
 	FVector origin = PitchedMesh.GetOrigin();
 	if (bIsCrouched)
 	{
-		origin.Z = (-origin.Z - (DefaultBaseEyeHeight - DefMesh1P->RelativeLocation.Z));
+		origin.Z = (origin.Z - (DefaultBaseEyeHeight - DefMesh1P->RelativeLocation.Z));
 	}
 
 	Mesh1P->SetRelativeLocationAndRotation(origin, PitchedMesh.Rotator());
@@ -794,26 +794,54 @@ void ANimModCharacter::SetCurrentWeapon(class ANimModWeapon* NewWeapon, class AN
 //////////////////////////////////////////////////////////////////////////
 // Weapon usage
 
-void ANimModCharacter::StartWeaponFire()
+void ANimModCharacter::StartPrimaryWeaponFire()
 {
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModCharacter::StartWeaponFire()"));
 	if (!bWantsToFire)
 	{
 		bWantsToFire = true;
 		if (CurrentWeapon)
 		{
-			CurrentWeapon->StartFire();
+			CurrentWeapon->StartPrimaryFire();
 		}
 	}
 }
 
-void ANimModCharacter::StopWeaponFire()
+void ANimModCharacter::StopPrimaryWeaponFire()
 {
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModCharacter::StopWeaponFire()"));
 	if (bWantsToFire)
 	{
 		bWantsToFire = false;
 		if (CurrentWeapon)
 		{
-			CurrentWeapon->StopFire();
+			CurrentWeapon->StopPrimaryFire();
+		}
+	}
+}
+
+void ANimModCharacter::StartSecondaryWeaponFire()
+{
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModCharacter::StartWeaponFire()"));
+	if (!bWantsToFire)
+	{
+		bWantsToFire = true;
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->StartSecondaryFire();
+		}
+	}
+}
+
+void ANimModCharacter::StopSecondaryWeaponFire()
+{
+	//UE_LOG(LogNimMod, Warning, TEXT("ANimModCharacter::StopWeaponFire()"));
+	if (bWantsToFire)
+	{
+		bWantsToFire = false;
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->StopSecondaryFire();
 		}
 	}
 }
@@ -1080,13 +1108,13 @@ void ANimModCharacter::OnStartPrimaryFire()
 			SetRunning(false, false);
 		}
 		MyPC->StartFire();
-		StartWeaponFire();
+		StartPrimaryWeaponFire();
 	}
 }
 
 void ANimModCharacter::OnStopPrimaryFire()
 {
-	StopWeaponFire();
+	StopPrimaryWeaponFire();
 }
 
 void ANimModCharacter::OnStartSecondaryFire()
@@ -1098,13 +1126,13 @@ void ANimModCharacter::OnStartSecondaryFire()
 		{
 			SetRunning(false, false);
 		}
-		StartWeaponFire();
+		StartSecondaryWeaponFire();
 	}
 }
 
 void ANimModCharacter::OnStopSecondaryFire()
 {
-	StopWeaponFire();
+	StopSecondaryWeaponFire();
 }
 
 void ANimModCharacter::OnStartTargeting()
@@ -1254,7 +1282,7 @@ void ANimModCharacter::OnReload()
 
 void ANimModCharacter::OnStartRunning()
 {
-	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	/*ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
 	if (MyPC && MyPC->IsGameInputAllowed())
 	{
 		if (IsTargeting())
@@ -1263,12 +1291,12 @@ void ANimModCharacter::OnStartRunning()
 		}
 		StopWeaponFire();
 		SetRunning(true, false);
-	}
+	}*/
 }
 
 void ANimModCharacter::OnStartRunningToggle()
 {
-	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	/*ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
 	if (MyPC && MyPC->IsGameInputAllowed())
 	{
 		if (IsTargeting())
@@ -1277,7 +1305,7 @@ void ANimModCharacter::OnStartRunningToggle()
 		}
 		StopWeaponFire();
 		SetRunning(true, true);
-	}
+	}*/
 }
 
 void ANimModCharacter::OnStopRunning()
@@ -1500,3 +1528,8 @@ void ANimModCharacter::UpdateTeamColorsAllMIDs()
 		UpdateTeamColors(MeshMIDs[i]);
 	}
 }
+
+//UCameraComponent* ANimModCharacter::GetCameraComponent()
+//{
+//
+//}

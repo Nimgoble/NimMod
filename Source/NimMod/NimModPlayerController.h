@@ -132,6 +132,9 @@ public:
 	void SpecNext();
 	void SpecPrev();
 
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
+	class ANimModPlayerCameraManager *GetNimModPlayerCameraManager();
+
 	/** set infinite ammo cheat */
 	void SetInfiniteAmmo(bool bEnable);
 

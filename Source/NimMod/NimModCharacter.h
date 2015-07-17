@@ -36,6 +36,7 @@ public:
 	/** Make sure pawn properties are back to default. */
 	virtual void SetPlayerDefaults();
 
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Character")
 	class ANimModPlayerController *GetNimModPlayerController();
 
 	/**
@@ -92,10 +93,16 @@ public:
 	// Weapon usage
 
 	/** [local] starts weapon fire */
-	void StartWeaponFire();
+	void StartPrimaryWeaponFire();
 
 	/** [local] stops weapon fire */
-	void StopWeaponFire();
+	void StopPrimaryWeaponFire();
+
+	/** [local] starts weapon fire */
+	void StartSecondaryWeaponFire();
+
+	/** [local] stops weapon fire */
+	void StopSecondaryWeaponFire();
 
 	/** check if pawn can fire weapon */
 	bool CanFire() const;
@@ -284,6 +291,9 @@ public:
 	/** Base eye height above collision center. */
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	float BaseEyeHeight;*/
+
+	/*UFUNCTION(BlueprintCallable, Category = "NimMod|Character")
+	class UCameraComponent* GetCameraComponent();*/
 
 	/** First person camera */
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)

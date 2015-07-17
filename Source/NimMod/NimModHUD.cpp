@@ -6,6 +6,8 @@
 #include "TextureResource.h"
 #include "CanvasItem.h"
 #include "NimModPlayerController.h"
+#include "NimModCharacter.h"
+#include "NimModWeapon.h"
 #include "Blueprint/UserWidget.h"
 
 ANimModHUD::ANimModHUD(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -41,6 +43,14 @@ void ANimModHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
+	ANimModCharacter *character = Cast<ANimModCharacter>(GetOwningPawn());
+	if (character)
+	{
+		ANimModWeapon *weapon = character->GetWeapon();
+		if (weapon)
+			weapon->OnDrawHUD(this, Canvas->SizeX, Canvas->SizeY);
+	}
+
 	// Draw very simple crosshair
 
 	// find center of the Canvas
@@ -54,6 +64,13 @@ void ANimModHUD::DrawHUD()
 	FCanvasTileItem TileItem( CrosshairDrawPosition, CrosshairTex->Resource, FLinearColor::White);
 	TileItem.BlendMode = SE_BLEND_Translucent;
 	Canvas->DrawItem( TileItem );
+}
+FVector2D ANimModHUD::GetCanvasSize()
+{
+	if (Canvas == nullptr)
+		return FVector2D();
+
+	return FVector2D(Canvas->SizeX, Canvas->SizeY);
 }
 void ANimModHUD::CommitChatMessage()
 {

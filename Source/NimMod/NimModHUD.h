@@ -15,6 +15,9 @@ public:
 	/** Primary draw call for the HUD */
 	virtual void DrawHUD() override;
 
+	UFUNCTION(BlueprintCallable, Category = "NimMod|HUD")
+	FVector2D GetCanvasSize();
+
 	UPROPERTY(EditDefaultsOnly, Category = Layout)
 	TSubclassOf<class UNimModHUDLayoutWidget> LayoutWidget;
 

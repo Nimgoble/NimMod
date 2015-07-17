@@ -1430,3 +1430,8 @@ void ANimModPlayerController::SpecPrev()
 
 	ViewAPlayer(-1);
 }
+
+ANimModPlayerCameraManager *ANimModPlayerController::GetNimModPlayerCameraManager()
+{
+	return Cast<ANimModPlayerCameraManager>(PlayerCameraManager);
+}

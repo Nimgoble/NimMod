@@ -16,6 +16,14 @@ namespace EWeaponState
 	};
 }
 
+UENUM(BlueprintType)
+enum class ENimModFireMode : uint8
+{
+	SemiAutomatic UMETA(DisplayName = "Semi-Automatic"),
+	Automatic UMETA(DisplayName = "Automatic"),
+	BurstFire UMETA(DisplayName = "Burst Fire")
+};
+
 USTRUCT()
 struct FWeaponData
 {
@@ -48,6 +56,9 @@ struct FWeaponData
 	/** The order of this weapon in its slot */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat, meta = (UIMin = 0, ClampMin = 0, UIMax = 9, ClampMax = 9))
 	int32 InventorySlotOrder;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	TArray<ENimModFireMode> FireModes;
 
 	/** time between two consecutive shots */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
@@ -155,10 +166,28 @@ public:
 	// Input
 
 	/** [local + server] start weapon fire */
-	virtual void StartFire();
+	virtual void StartPrimaryFire();
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "StartSecondaryFire"))
+	void OnStartPrimaryFire();
 
 	/** [local + server] stop weapon fire */
-	virtual void StopFire();
+	virtual void StopPrimaryFire();
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "StartSecondaryFire"))
+	void OnStopPrimaryFire();
+
+	/** [local + server] start weapon fire */
+	virtual void StartSecondaryFire();
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "StartSecondaryFire"))
+	void OnStartSecondaryFire();
+
+	/** [local + server] stop weapon fire */
+	virtual void StopSecondaryFire();
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "StopSecondaryFire"))
+	void OnStopSecondaryFire();
 
 	/** [all] start weapon reload */
 	virtual void StartReload(bool bFromReplication = false);
@@ -173,6 +202,8 @@ public:
 	UFUNCTION(reliable, client)
 	void ClientStartReload();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "NimMod|Weapon|HUD")
+	void OnDrawHUD(class ANimModHUD *HUD, float width, float height);
 
 	//////////////////////////////////////////////////////////////////////////
 	// Control
@@ -290,6 +321,9 @@ public:
 	float GetEquipDuration() const;
 
 protected:
+
+	UPROPERTY(Transient, Replicated)
+	ENimModFireMode CurrentFireMode;
 
 	/** pawn owner */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_MyPawn)
@@ -448,10 +482,16 @@ protected:
 	// Input - server side
 
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerStartFire();
+	void ServerStartPrimaryFire();
 
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerStopFire();
+	void ServerStopPrimaryFire();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStartSecondaryFire();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerStopSecondaryFire();
 
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerStartReload();

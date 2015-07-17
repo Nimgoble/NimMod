@@ -23,7 +23,15 @@ public:
 	/** targeting FOV */
 	float TargetingFOV;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "NimMod|Camera")
+	float CurrentFOV;
+
 	/** After updating camera, inform pawn to update 1p mesh to match camera's location&rotation */
 	virtual void UpdateCamera(float DeltaTime) override;
-	
+
+	/*UFUNCTION(BlueprintCallable, Category = "NimMod|Camera")
+	void SetFOV(float fov);*/
+
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Camera")
+	void ResetFOV();
 };
