@@ -104,6 +104,8 @@ void ANimModWeapon::OnEquip()
 	{
 		PlayWeaponSound(EquipSound);
 	}
+
+	HandleOnEquip();
 }
 
 void ANimModWeapon::OnEquipFinished()
@@ -129,11 +131,13 @@ void ANimModWeapon::OnEquipFinished()
 			PlayWeaponAnimation(IdleAnim);*/
 	}
 
-
+	HandleOnEquipFinished();
 }
 
 void ANimModWeapon::OnUnEquip()
 {
+	//Do this, first, so we still have a relevant player controller
+	HandleOnUnEquip();
 	DetachMeshFromPawn();
 	bIsEquipped = false;
 	StopPrimaryFire();
@@ -261,11 +265,11 @@ void ANimModWeapon::StartSecondaryFire()
 		ServerStartSecondaryFire();
 	}
 
-	if (!bWantsToFire)
+	/*if (!bWantsToFire)
 	{
 		bWantsToFire = true;
 		DetermineWeaponState();
-	}
+	}*/
 
 	OnStartSecondaryFire();
 }
@@ -278,11 +282,11 @@ void ANimModWeapon::StopSecondaryFire()
 		ServerStopSecondaryFire();
 	}
 
-	if (bWantsToFire)
+	/*if (bWantsToFire)
 	{
 		bWantsToFire = false;
 		DetermineWeaponState();
-	}
+	}*/
 
 	OnStopSecondaryFire();
 }

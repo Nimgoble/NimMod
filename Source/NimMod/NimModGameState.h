@@ -18,6 +18,8 @@ public:
 
 	ANimModGameState(const FObjectInitializer& ObjectInitializer);
 
+	virtual void BeginPlay();
+
 	/** number of teams in current game (doesn't deprecate when no players are left in a team) */
 	UPROPERTY(Transient, Replicated)
 	int32 NumTeams;
@@ -25,6 +27,9 @@ public:
 	/** accumulated score per team */
 	UPROPERTY(Transient, Replicated)
 	TArray<int32> TeamScores;
+
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Team")
+	int32 GetTeamScore(NimModTeam team);
 
 	/** time left for warmup / match */
 	UPROPERTY(Transient, Replicated)
@@ -66,4 +71,22 @@ private:
 
 	UPROPERTY(Transient, Replicated)
 	FString originalMapName;
+
+	/**
+	* @return true if ActorToReset should have Reset() called on it while restarting the game,
+	*		   false if the GameMode will manually reset it or if the actor does not need to be reset
+	*/
+	bool ShouldReset(AActor* ActorToReset);
+
+	/*UPROPERTY(Transient, Replicated)
+	class ARoundManager_ForceRespawn *RoundManager;*/
+
+	/*UPROPERTY(Transient, Replicated)
+	class ANimModRoundManager *RoundManager;*/
+
+	UPROPERTY()
+	TArray<AActor *> currentRoundActors;
+
+	void InitializeRoundObjects_ForceRespawn();
+	void RestartRound_ForceRespawn();
 };

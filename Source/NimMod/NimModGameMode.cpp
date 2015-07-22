@@ -11,6 +11,7 @@
 #include "NimModSpectatorPawn.h"
 #include "VIPTrigger.h"
 #include "NimModRoundManager.h"
+#include "RoundManager_ForceRespawn.h"
 #include "NimModGameInstance.h"
 #include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
 //#include "Runtime/Engine/Classes/Particles/ParticleEventManager.h"
@@ -291,6 +292,29 @@ void ANimModGameMode::Logout(AController* Exiting)
 	UpdateServerPlayerCount();
 }
 
+void ANimModGameMode::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	if (!HasAuthority())
+		return;
+
+	UNimModGameInstance *gameInstance = Cast<UNimModGameInstance>(GetGameInstance());
+	ANimModGameState *gameState = GetGameState();
+	if (gameInstance && gameState)
+	{
+		TArray<int32> savedTeamScores = gameInstance->GetSavedTeamScores();
+
+		if (savedTeamScores.Num() != gameState->TeamScores.Num())
+			return;
+
+		for (int i = 0; i <= (int32)NimModTeam::VIP; ++i)
+		{
+			gameState->TeamScores[i] = savedTeamScores[i];
+		}
+	}
+}
+
 bool ANimModGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 {
 	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(Player);
@@ -310,7 +334,7 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 	ANimModPlayerState* KillerPlayerState = Killer ? Cast<ANimModPlayerState>(Killer->PlayerState) : NULL;
 	ANimModPlayerState* VictimPlayerState = KilledPlayer ? Cast<ANimModPlayerState>(KilledPlayer->PlayerState) : NULL;
 	bool isVIPKill = (VictimPlayerState == NULL) ? false : VictimPlayerState->GetTeam() == NimModTeam::VIP;
-	int32 score = (isVIPKill) ? 10 : 1;
+	int32 score = 1;
 
 	ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
 
@@ -318,21 +342,18 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 	{
 		KillerPlayerState->ScoreKill(VictimPlayerState, KillScore);
 		KillerPlayerState->InformAboutKill(KillerPlayerState, DamageType, VictimPlayerState);
-		int32 teamIndex = ((int32)KillerPlayerState->GetTeam());
-		gameState->TeamScores[teamIndex] += score;
 	}
 
 	if (VictimPlayerState)
 	{
 		VictimPlayerState->ScoreDeath(KillerPlayerState, DeathScore);
 		VictimPlayerState->BroadcastDeath(KillerPlayerState, DamageType, VictimPlayerState);
-		int32 teamIndex = ((int32)VictimPlayerState->GetTeam());
-		gameState->TeamScores[teamIndex] -= score;
 	}
 
 	if (isVIPKill)
 	{
-		//TODO: Inform the players of the VIP's death and restart the round.
+		int32 teamIndex = ((int32)NimModTeam::ASSASSINS);
+		gameState->TeamScores[teamIndex] += score;
 		gameState->VIPKilled();
 	}
 }
@@ -567,6 +588,43 @@ void ANimModGameMode::BroadcastHUDMessage(ANimModPlayerController *controller, F
 				PlayerController->ClientHUDMessage(message);
 		}
 	}
+}
+
+void ANimModGameMode::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
+{
+	for (FActorIterator It(GetWorld()); It; ++It)
+	{
+		AActor* A = *It;
+		if (A && ShouldActorTravel(A))
+			ActorList.Add(A);
+	}
+}
+
+bool ANimModGameMode::ShouldActorTravel(AActor *Actor)
+{
+	UClass *actorClass = Actor->GetClass();
+	//AGameNetworkManager *networkManager = Cast<AGameNetworkManager>(Actor);
+	//AParticleEventManager *particleEventManager = Cast<AParticleEventManager>(ActorToReset);
+	if
+	(
+		actorClass->IsChildOf(APlayerController::StaticClass()) ||
+		actorClass->IsChildOf(AGameMode::StaticClass()) ||
+		actorClass->IsChildOf(APlayerCameraManager::StaticClass()) ||
+		actorClass->IsChildOf(AHUD::StaticClass()) ||
+		actorClass->IsChildOf(UGameViewportClient::StaticClass()) ||
+		actorClass->IsChildOf(AGameSession::StaticClass()) ||
+		actorClass->IsChildOf(APlayerState::StaticClass()) ||
+		actorClass->IsChildOf(AGameState::StaticClass())
+		/*#ifdef DEBUG*/
+		/*actorClass->IsChildOf(AGameplayDebuggingReplicator::StaticClass()) ||*/
+		/*#endif*/
+		/*particleEventManager != nullptr ||*/
+		/*(AActor *)GetWorld()->MyParticleEventManager == ActorToReset ||
+		networkManager != nullptr*/
+	)
+		return true;
+
+	return false;
 }
 
 //void ANimModGameMode::RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN)

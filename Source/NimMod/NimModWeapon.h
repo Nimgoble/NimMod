@@ -143,11 +143,20 @@ public:
 	/** weapon is being equipped by owner pawn */
 	virtual void OnEquip();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "NimMod|Weapon")
+	void HandleOnEquip();
+
 	/** weapon is now equipped by owner pawn */
 	virtual void OnEquipFinished();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "NimMod|Weapon")
+	void HandleOnEquipFinished();
+
 	/** weapon is holstered by owner pawn */
 	virtual void OnUnEquip();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "NimMod|Weapon")
+	void HandleOnUnEquip();
 
 	/** [server] weapon was added to pawn's inventory */
 	virtual void OnEnterInventory(ANimModCharacter* NewOwner);

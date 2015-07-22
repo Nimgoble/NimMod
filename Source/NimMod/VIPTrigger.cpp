@@ -3,6 +3,7 @@
 #include "NimMod.h"
 #include "NimModCharacter.h"
 #include "NimModPlayerController.h"
+#include "NimModPlayerState.h"
 #include "NimModGameMode.h"
 #include "NimModTypes.h"
 #include "VIPTrigger.h"
@@ -30,10 +31,11 @@ void AVIPTrigger::ActorEnteredVolume(class AActor* Other)
 
 	if (pc->GetPlayerTeam() == NimModTeam::VIP)
 	{
+		pc->GetNimModPlayerState()->ScorePoints(10);
 		//Add to their score
 		ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
-		int32 teamIndex = ((int32)NimModTeam::VIP);
-		gameState->TeamScores[teamIndex] += 10;
+		int32 teamIndex = ((int32)NimModTeam::BODYGUARDS);
+		gameState->TeamScores[teamIndex] += 1;
 		gameState->VIPEscaped();
 
 	}

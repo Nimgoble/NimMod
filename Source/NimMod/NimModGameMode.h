@@ -28,6 +28,8 @@ public:
 
 	virtual void Logout(AController* Exiting);
 
+	virtual void PostSeamlessTravel() override;
+
 	/** @return true if it's valid to call RestartPlayer. Will call Player->CanRestartPlayer */
 	bool PlayerCanRestart_Implementation(APlayerController* Player) override;
 
@@ -73,7 +75,10 @@ public:
 
 	void BroadcastHUDMessage(class ANimModPlayerController *controller, FNimModHUDMessage message);
 
+	virtual void GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList);
 protected:
+
+	bool ShouldActorTravel(AActor *Actor);
 
 	void UpdateServerPlayerCount();
 	/*UPROPERTY()

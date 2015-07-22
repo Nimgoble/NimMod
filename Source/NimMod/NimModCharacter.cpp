@@ -7,6 +7,7 @@
 #include "NimModGameState.h"
 #include "NimModGameMode.h"
 #include "NimModPlayerController.h"
+#include "NimModPlayerCameraManager.h"
 #include "NimModWeapon.h"
 #include "NimModDamageType.h"
 #include "Animation/AnimInstance.h"
@@ -421,6 +422,14 @@ void ANimModCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& D
 		UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
 	}
 
+	ANimModPlayerController *controller = GetNimModPlayerController();
+	if (controller)
+	{
+		ANimModPlayerCameraManager *cameraManager = controller->GetNimModPlayerCameraManager();
+		if (cameraManager)
+			cameraManager->ResetFOV();
+	}
+
 	// remove all weapons
 	DestroyInventory();
 
@@ -644,17 +653,13 @@ void ANimModCharacter::SpawnDefaultInventory()
 
 void ANimModCharacter::DestroyInventory()
 {
-	if (Role < ROLE_Authority)
-	{
-		return;
-	}
-
 	for (ANimModWeapon *nimModWeapon : Inventory)
 	{
 		if (nimModWeapon)
 		{
 			RemoveWeapon(nimModWeapon);
-			nimModWeapon->Destroy();
+			if (Role == ROLE_Authority)
+				nimModWeapon->Destroy();
 		}
 		/*InventorySlot slot = slotKVP.Value;
 		while (slot.Num() != 0)
@@ -686,6 +691,9 @@ void ANimModCharacter::AddWeapon(ANimModWeapon* Weapon)
 
 void ANimModCharacter::RemoveWeapon(ANimModWeapon* Weapon)
 {
+	if (Weapon && CurrentWeapon == Weapon)
+		Weapon->OnUnEquip();
+
 	if (Weapon && Role == ROLE_Authority)
 	{
 		int32 weaponIndex = GetWeaponInventoryIndex(Weapon);

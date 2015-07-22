@@ -252,6 +252,16 @@ void UNimModGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
+void UNimModGameInstance::SaveTeamScoresForRoundRestart(TArray<int32> teamScores)
+{
+	SavedTeamScores = teamScores;
+}
+
+TArray<int32> UNimModGameInstance::GetSavedTeamScores()
+{
+	return SavedTeamScores;
+}
+
 void UNimModGameInstance::ProcessPendingMessages()
 {
 	FServerMessage message;

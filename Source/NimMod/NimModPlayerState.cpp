@@ -9,6 +9,7 @@
 ANimModPlayerState::ANimModPlayerState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	Team = NimModTeam::SPECTATORS;
+	Score = 0;
 	NumKills = 0;
 	NumDeaths = 0;
 	NumBulletsFired = 0;
@@ -22,6 +23,7 @@ void ANimModPlayerState::Reset()
 
 	//PlayerStates persist across seamless travel.  Keep the same teams as previous match.
 	//SetTeamNum(0);
+	Score = 0;
 	NumKills = 0;
 	NumDeaths = 0;
 	NumBulletsFired = 0;
@@ -79,6 +81,26 @@ void ANimModPlayerState::CopyProperties(class APlayerState* PlayerState)
 	if (NimModPlayer)
 	{
 		NimModPlayer->Team = Team;
+		/*NimModPlayer->NumKills = NumKills;
+		NimModPlayer->NumDeaths = NumDeaths;
+		NimModPlayer->NumBulletsFired = NumBulletsFired;
+		NimModPlayer->NumRocketsFired = NumRocketsFired;*/
+	}
+}
+
+void ANimModPlayerState::SeamlessTravelTo(class APlayerState* NewPlayerState)
+{
+	Super::SeamlessTravelTo(NewPlayerState);
+
+	ANimModPlayerState* NimModPlayer = Cast<ANimModPlayerState>(NewPlayerState);
+	if (NimModPlayer)
+	{
+		NimModPlayer->Team = Team;
+		NimModPlayer->Score = Score;
+		NimModPlayer->NumKills = NumKills;
+		NimModPlayer->NumDeaths = NumDeaths;
+		NimModPlayer->NumBulletsFired = NumBulletsFired;
+		NimModPlayer->NumRocketsFired = NumRocketsFired;
 	}
 }
 

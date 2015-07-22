@@ -50,26 +50,26 @@ void ANimModRoundManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UWorld *world = GetWorld();
-	if (world != nullptr)
-	{
-		originalMapName = world->GetCurrentLevel()->GetOutermost()->GetName();
-		if (GetWorld()->IsPlayInEditor())
-		{
-			FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(world);
-			originalMapName = world->StripPIEPrefixFromPackageName(originalMapName, world->BuildPIEPackagePrefix(WorldContext.PIEInstance));
-		}
-		/*AGameMode *genericGameMode = world->GetAuthGameMode();
-		if (genericGameMode == nullptr)
-			return;
+	//UWorld *world = GetWorld();
+	//if (world != nullptr)
+	//{
+	//	originalMapName = world->GetCurrentLevel()->GetOutermost()->GetName();
+	//	if (GetWorld()->IsPlayInEditor())
+	//	{
+	//		FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(world);
+	//		originalMapName = world->StripPIEPrefixFromPackageName(originalMapName, world->BuildPIEPackagePrefix(WorldContext.PIEInstance));
+	//	}
+	//	/*AGameMode *genericGameMode = world->GetAuthGameMode();
+	//	if (genericGameMode == nullptr)
+	//		return;
 
-		ANimModGameMode *gameMode = Cast<ANimModGameMode>(genericGameMode);
-		if (gameMode)
-			gameMode->SetCurrentRoundManager(this);*/
-	}
+	//	ANimModGameMode *gameMode = Cast<ANimModGameMode>(genericGameMode);
+	//	if (gameMode)
+	//		gameMode->SetCurrentRoundManager(this);*/
+	//}
 
 	//InitializeRoundObjects_OverwriteWithArchive();
-	//InitializeRoundObjects_ForceRespawn();
+	InitializeRoundObjects_ForceRespawn();
 }
 
 //void ANimModRoundManager::BeginDestroy()
@@ -191,9 +191,9 @@ bool ANimModRoundManager::ShouldReset(AActor* ActorToReset)
 
 void ANimModRoundManager::RestartRound_Implementation()
 {
-	GetWorld()->SeamlessTravel(originalMapName);
-	//GetWorld()->SeamlessTravel(TEXT("?Restart"));
-	return;
+	//GetWorld()->SeamlessTravel(originalMapName);
+	////GetWorld()->SeamlessTravel(TEXT("?Restart"));
+	//return;
 	//Players should already be frozen
 	//FreezePlayers();
 
@@ -206,7 +206,7 @@ void ANimModRoundManager::RestartRound_Implementation()
 
 	//RestartRound_OverwriteWithArchive();
 
-	//RestartRound_ForceRespawn();
+	RestartRound_ForceRespawn();
 
 	//GetWorld()->ForceGarbageCollection(true);
 
@@ -243,7 +243,7 @@ void ANimModRoundManager::RestartRound_Implementation()
 	}
 
 	//Unfreeze the players.
-	UnfreezePlayers();
+	//UnfreezePlayers();
 }
 
 void ANimModRoundManager::FreezePlayers_Implementation()

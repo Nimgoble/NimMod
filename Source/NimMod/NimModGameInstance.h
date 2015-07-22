@@ -72,6 +72,9 @@ public:
 	/** virtual function to allow custom GameInstances an opportunity to do cleanup when shutting down */
 	virtual void Shutdown();
 
+	void SaveTeamScoresForRoundRestart(TArray<int32> teamScores);
+	TArray<int32> GetSavedTeamScores();
+
 	/*UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "UpdateServer"))
 	void HandleUpdateServer(FNimModServerInfo info);*/
 
@@ -129,4 +132,7 @@ private:
 
 	TQueue<FServerMessage, EQueueMode::Type::Mpsc> MessageQueue;
 	FCriticalSection messageLock;
+
+	UPROPERTY()
+	TArray<int32> SavedTeamScores;
 };

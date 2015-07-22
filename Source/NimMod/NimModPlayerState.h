@@ -84,11 +84,14 @@ public:
 	//We don't need stats about amount of ammo fired to be server authenticated, so just increment these with local functions
 	void AddBulletsFired(int32 NumBullets);
 	void AddRocketsFired(int32 NumRockets);
+	/** helper for scoring points */
+	void ScorePoints(int32 Points);
 
 	/** Set whether the player is a quitter */
 	void SetQuitter(bool bInQuitter);
 
 	virtual void CopyProperties(class APlayerState* PlayerState) override;
+	virtual void SeamlessTravelTo(class APlayerState* NewPlayerState) override;
 protected:
 
 	/** Set the mesh colors based on the current teamnum variable */
@@ -97,6 +100,10 @@ protected:
 	/** team number */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamColor)
 	NimModTeam Team;
+
+	/** number of kills */
+	/*UPROPERTY(Transient, Replicated)
+	int32 Score;*/
 
 	/** number of kills */
 	UPROPERTY(Transient, Replicated)
@@ -117,7 +124,4 @@ protected:
 	/** whether the user quit the match */
 	UPROPERTY()
 	uint8 bQuitter : 1;
-
-	/** helper for scoring points */
-	void ScorePoints(int32 Points);
 };
