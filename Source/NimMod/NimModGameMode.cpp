@@ -342,6 +342,8 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 	{
 		KillerPlayerState->ScoreKill(VictimPlayerState, KillScore);
 		KillerPlayerState->InformAboutKill(KillerPlayerState, DamageType, VictimPlayerState);
+		if (isVIPKill && KillerPlayerState->GetTeam() == NimModTeam::ASSASSINS)
+			KillerPlayerState->ScorePoints(10);
 	}
 
 	if (VictimPlayerState)

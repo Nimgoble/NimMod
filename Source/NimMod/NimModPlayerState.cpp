@@ -10,6 +10,7 @@ ANimModPlayerState::ANimModPlayerState(const FObjectInitializer& ObjectInitializ
 {
 	Team = NimModTeam::SPECTATORS;
 	Score = 0;
+	TotalScore = 0;
 	NumKills = 0;
 	NumDeaths = 0;
 	NumBulletsFired = 0;
@@ -19,16 +20,18 @@ ANimModPlayerState::ANimModPlayerState(const FObjectInitializer& ObjectInitializ
 
 void ANimModPlayerState::Reset()
 {
+	float tempScore = Score;
 	Super::Reset();
+	Score = tempScore;
 
 	//PlayerStates persist across seamless travel.  Keep the same teams as previous match.
 	//SetTeamNum(0);
-	Score = 0;
+	/*Score = 0;
 	NumKills = 0;
 	NumDeaths = 0;
 	NumBulletsFired = 0;
 	NumRocketsFired = 0;
-	bQuitter = false;
+	bQuitter = false;*/
 }
 
 void ANimModPlayerState::UnregisterPlayerWithSession()
@@ -81,7 +84,8 @@ void ANimModPlayerState::CopyProperties(class APlayerState* PlayerState)
 	if (NimModPlayer)
 	{
 		NimModPlayer->Team = Team;
-		/*NimModPlayer->NumKills = NumKills;
+		/*NimModPlayer->Score = Score;
+		NimModPlayer->NumKills = NumKills;
 		NimModPlayer->NumDeaths = NumDeaths;
 		NimModPlayer->NumBulletsFired = NumBulletsFired;
 		NimModPlayer->NumRocketsFired = NumRocketsFired;*/
@@ -97,13 +101,13 @@ void ANimModPlayerState::SeamlessTravelTo(class APlayerState* NewPlayerState)
 	{
 		NimModPlayer->Team = Team;
 		NimModPlayer->Score = Score;
+		NimModPlayer->TotalScore = TotalScore;
 		NimModPlayer->NumKills = NumKills;
 		NimModPlayer->NumDeaths = NumDeaths;
 		NimModPlayer->NumBulletsFired = NumBulletsFired;
 		NimModPlayer->NumRocketsFired = NumRocketsFired;
 	}
 }
-
 void ANimModPlayerState::UpdateTeamColors()
 {
 	AController* OwnerController = Cast<AController>(GetOwner());
@@ -137,6 +141,12 @@ float ANimModPlayerState::GetScore() const
 	return Score;
 }
 
+float ANimModPlayerState::GetTotalScore() const
+{
+	return TotalScore;
+	/*return Score + (NumKills - NumDeaths);*/
+}
+
 int32 ANimModPlayerState::GetNumBulletsFired() const
 {
 	return NumBulletsFired;
@@ -166,7 +176,7 @@ void ANimModPlayerState::ScoreDeath(ANimModPlayerState* KilledBy, int32 Points)
 
 void ANimModPlayerState::ScorePoints(int32 Points)
 {
-	ANimModGameState* const MyGameState = Cast<ANimModGameState>(GetWorld()->GameState);
+	/*ANimModGameState* const MyGameState = Cast<ANimModGameState>(GetWorld()->GameState);
 	uint8 teamNumber = (uint8)Team;
 	if (MyGameState && teamNumber >= 0)
 	{
@@ -176,9 +186,10 @@ void ANimModPlayerState::ScorePoints(int32 Points)
 		}
 
 		MyGameState->TeamScores[teamNumber] += Points;
-	}
+	}*/
 
 	Score += Points;
+	TotalScore = Score + (NumKills - NumDeaths);
 }
 
 void ANimModPlayerState::InformAboutKill_Implementation(class ANimModPlayerState* KillerPlayerState, const UDamageType* KillerDamageType, class ANimModPlayerState* KilledPlayerState)
@@ -221,6 +232,7 @@ void ANimModPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ANimModPlayerState, TotalScore);
 	DOREPLIFETIME(ANimModPlayerState, Team);
 	DOREPLIFETIME(ANimModPlayerState, NumKills);
 	DOREPLIFETIME(ANimModPlayerState, NumDeaths);

@@ -38,7 +38,6 @@ void ANimModHUD::PostInitializeComponents()
 	Super::PostInitializeComponents();
 }
 
-
 void ANimModHUD::DrawHUD()
 {
 	Super::DrawHUD();

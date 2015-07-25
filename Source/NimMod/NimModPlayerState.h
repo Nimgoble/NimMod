@@ -46,27 +46,38 @@ public:
 	void ScoreDeath(ANimModPlayerState* KilledBy, int32 Points);
 
 	/** get current team */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	NimModTeam GetTeam() const;
 
 	/** get number of kills */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	int32 GetKills() const;
 
 	/** get number of deaths */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	int32 GetDeaths() const;
 
 	/** get number of points */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
+	float GetTotalScore() const;
+
+	/** get number of points */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	float GetScore() const;
 
 	/** get number of bullets fired this match */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	int32 GetNumBulletsFired() const;
 
 	/** get number of rockets fired this match */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	int32 GetNumRocketsFired() const;
 
 	/** get whether the player quit the match */
 	bool IsQuitter() const;
 
 	/** gets truncated player name to fit in death log and scoreboards */
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
 	FString GetShortPlayerName() const;
 
 	/** Sends kill (excluding self) to clients */
@@ -92,6 +103,7 @@ public:
 
 	virtual void CopyProperties(class APlayerState* PlayerState) override;
 	virtual void SeamlessTravelTo(class APlayerState* NewPlayerState) override;
+	//virtual void Reset() override;
 protected:
 
 	/** Set the mesh colors based on the current teamnum variable */
@@ -102,8 +114,8 @@ protected:
 	NimModTeam Team;
 
 	/** number of kills */
-	/*UPROPERTY(Transient, Replicated)
-	int32 Score;*/
+	UPROPERTY(Transient, Replicated)
+	int32 TotalScore;
 
 	/** number of kills */
 	UPROPERTY(Transient, Replicated)

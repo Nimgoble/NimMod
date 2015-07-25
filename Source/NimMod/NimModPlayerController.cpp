@@ -475,6 +475,8 @@ void ANimModPlayerController::OnConditionalCloseScoreboard()
 
 void ANimModPlayerController::OnToggleScoreboard()
 {
+	if (ScoreBoard != nullptr)
+		ScoreBoard->ToggleWidget();
 	/*ANimModHUD* NimModHUD = GetNimModHUD();
 	if (NimModHUD && (NimModHUD->IsMatchOver() == false))
 	{
@@ -484,6 +486,8 @@ void ANimModPlayerController::OnToggleScoreboard()
 
 void ANimModPlayerController::OnShowScoreboard()
 {
+	if (ScoreBoard != nullptr)
+		ScoreBoard->ShowWidget();
 	/*ANimModHUD* NimModHUD = GetNimModHUD();
 	if (NimModHUD)
 	{
@@ -493,6 +497,8 @@ void ANimModPlayerController::OnShowScoreboard()
 
 void ANimModPlayerController::OnHideScoreboard()
 {
+	if (ScoreBoard != nullptr)
+		ScoreBoard->RemoveWidget();
 	//ANimModHUD* NimModHUD = GetNimModHUD();
 	//// If have a valid match and the match is over - hide the scoreboard
 	//if ((NimModHUD != NULL) && (NimModHUD->IsMatchOver() == false))
@@ -503,7 +509,7 @@ void ANimModPlayerController::OnHideScoreboard()
 
 void ANimModPlayerController::ClientPutInServer_Implementation()
 {
-	InitializeTeamMenu();
+	InitializeClientWidgets();
 	OnShowTeamMenu();
 }
 
@@ -542,7 +548,7 @@ void ANimModPlayerController::OnHideTeamMenu()
 //	return TeamMenu == nullptr;
 //}
 
-void ANimModPlayerController::InitializeTeamMenu()
+void ANimModPlayerController::InitializeClientWidgets()
 {
 	if 
 	(
@@ -552,6 +558,16 @@ void ANimModPlayerController::InitializeTeamMenu()
 	)
 	{
 		TeamMenu = CreateWidget<UNimModWidgetBase>(this, TeamMenuWidget);
+	}
+
+	if
+	(
+		ScoreBoardWidget != nullptr &&
+		this->Player != nullptr &&
+		this->IsLocalPlayerController()
+	)
+	{
+		ScoreBoard = CreateWidget<UNimModWidgetBase>(this, ScoreBoardWidget);
 	}
 }
 
@@ -1366,10 +1382,9 @@ void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
 	if (currentTeam == team)
 		return;
 
-	GetNimModPlayerState()->SetTeam(team);
-
 	if (currentTeam == NimModTeam::SPECTATORS || !bHasHadInitialSpawn)
 	{
+		GetNimModPlayerState()->SetTeam(team);
 		UnFreeze();
 	}
 	else
@@ -1378,14 +1393,12 @@ void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
 		if (nimModCharacter)
 		{
 			if (nimModCharacter->IsAlive())
-			{
 				nimModCharacter->Suicide();
-				/*FDamageEvent damageEvent;
-				nimModCharacter->Die(0.0f, damageEvent, this, NULL);*/
-			}
 		}
 		else
 			BeginInactiveState();
+
+		GetNimModPlayerState()->SetTeam(team);
 	}
 		
 }

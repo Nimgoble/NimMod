@@ -112,7 +112,7 @@ public:
 	void OnToggleTeamMenu();
 	void OnShowTeamMenu();
 	void OnHideTeamMenu();
-	void InitializeTeamMenu();
+	void InitializeClientWidgets();
 
 	/*The type of UUserWidget that we should use as our team menu*/
 	UPROPERTY(EditDefaultsOnly, Category = UI)
@@ -120,6 +120,13 @@ public:
 	/*The instance of our TeamMenuWidget*/
 	UPROPERTY()
 	UNimModWidgetBase *TeamMenu;
+
+	/*The type of UUserWidget that we should use as our team menu*/
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+	TSubclassOf<class UNimModWidgetBase> ScoreBoardWidget;
+	/*The instance of our TeamMenuWidget*/
+	UPROPERTY()
+	UNimModWidgetBase *ScoreBoard;
 
 	UFUNCTION(BlueprintCallable, Server, reliable, WithValidation, Category = "UI")
 	void SetPlayerTeam(NimModTeam team);
