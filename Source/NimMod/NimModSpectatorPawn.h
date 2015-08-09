@@ -12,8 +12,4 @@ UCLASS()
 class NIMMOD_API ANimModSpectatorPawn : public ASpectatorPawn
 {
 	GENERATED_BODY()
-	
-	
-	
-	
 };

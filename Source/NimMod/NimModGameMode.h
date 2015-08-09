@@ -17,6 +17,7 @@ class ANimModGameMode : public AGameMode
 public:
 	ANimModGameMode(const FObjectInitializer& ObjectInitializer);
 
+	virtual void BeginPlay() override;
 	/** Initialize the game. This is called before actors' PreInitializeComponents. */
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
@@ -140,6 +141,14 @@ public:
 
 	/** get the name of the bots count option used in server travel URL */
 	static FString GetBotsCountOptionName();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "NimMod|Team")
+	TArray<FNimModTeamInfo> TeamDefinitions;
+
+private:
+	TArray<ANimModTeam *> Teams;
+
+	class ARoundManager_ForceRespawn *RoundManager;
 };
 
 

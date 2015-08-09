@@ -37,7 +37,7 @@ public:
 	*
 	* @param	NewTeamNumber	Team we want to be on.
 	*/
-	void SetTeam(NimModTeam NewTeam);
+	void SetTeam(ENimModTeam NewTeam);
 
 	/** player killed someone */
 	void ScoreKill(ANimModPlayerState* Victim, int32 Points);
@@ -47,7 +47,10 @@ public:
 
 	/** get current team */
 	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
-	NimModTeam GetTeam() const;
+	ENimModTeam GetTeam() const;
+
+	/*UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
+	FNimModTeam *GetTeam() const;*/
 
 	/** get number of kills */
 	UFUNCTION(BlueprintCallable, Category = "NimMod|Player")
@@ -111,7 +114,10 @@ protected:
 
 	/** team number */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamColor)
-	NimModTeam Team;
+	ENimModTeam Team;
+
+	/*UPROPERTY(Transient, ReplicatedUsing = OnRep_TeamColor)
+	FNimModTeam *Team;*/
 
 	/** number of kills */
 	UPROPERTY(Transient, Replicated)

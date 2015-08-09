@@ -8,7 +8,8 @@
 
 ANimModPlayerState::ANimModPlayerState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	Team = NimModTeam::SPECTATORS;
+	Team = ENimModTeam::SPECTATORS;
+	//Team = nullptr;
 	Score = 0;
 	TotalScore = 0;
 	NumKills = 0;
@@ -49,7 +50,7 @@ void ANimModPlayerState::ClientInitialize(class AController* InController)
 	UpdateTeamColors();
 }
 
-void ANimModPlayerState::SetTeam(NimModTeam NewTeam)
+void ANimModPlayerState::SetTeam(ENimModTeam NewTeam)
 {
 	Team = NewTeam;
 
@@ -121,10 +122,15 @@ void ANimModPlayerState::UpdateTeamColors()
 	}
 }
 
-NimModTeam ANimModPlayerState::GetTeam() const
+ENimModTeam ANimModPlayerState::GetTeam() const
 {
 	return Team;
 }
+
+//FNimModTeam *ANimModPlayerState::GetTeam() const
+//{
+//	return Team;
+//}
 
 int32 ANimModPlayerState::GetKills() const
 {

@@ -10,7 +10,7 @@ class ANimModTeamStart : public APlayerStart
 
 	/** Which team can start at this point */
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = Team)
-	NimModTeam SpawnTeam;
+	ENimModTeam SpawnTeam;
 
 	/** Whether players can start at this point */
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = Team)

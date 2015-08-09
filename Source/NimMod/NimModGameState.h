@@ -4,6 +4,7 @@
 
 #include "GameFramework/GameState.h"
 #include "NimModTypes.h"
+#include "NimModTeam.h"
 #include "NimModGameState.generated.h"
 
 /**
@@ -18,18 +19,32 @@ public:
 
 	ANimModGameState(const FObjectInitializer& ObjectInitializer);
 
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay();
 
-	/** number of teams in current game (doesn't deprecate when no players are left in a team) */
-	UPROPERTY(Transient, Replicated)
-	int32 NumTeams;
-
-	/** accumulated score per team */
-	UPROPERTY(Transient, Replicated)
-	TArray<int32> TeamScores;
+	//UPROPERTY(Transient, Replicated, ReplicatedUsing = OnRep_Teams)
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_Teams)
+	TArray<ANimModTeam *> Teams;
 
 	UFUNCTION(BlueprintCallable, Category = "NimMod|Team")
-	int32 GetTeamScore(NimModTeam team);
+	ANimModTeam *GetTeam(ENimModTeam teamEnum);
+
+	UFUNCTION()
+	void SetTeams(TArray<ANimModTeam *> InTeams);
+
+	UFUNCTION()
+	void SetRoundManager(class ARoundManager_ForceRespawn *NewRoundManager);
+
+	/** number of teams in current game (doesn't deprecate when no players are left in a team) */
+	/*UPROPERTY(Transient, Replicated)
+	int32 NumTeams;*/
+
+	/** accumulated score per team */
+	/*UPROPERTY(Transient, Replicated)
+	TArray<int32> TeamScores;*/
+
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Team")
+	int32 GetTeamScore(ENimModTeam team);
 
 	/** time left for warmup / match */
 	UPROPERTY(Transient, Replicated)
@@ -49,7 +64,13 @@ public:
 	void VIPKilled();
 
 private:
+	UFUNCTION()
+	void OnRep_Teams(TArray<ANimModTeam *> replicatedTeams);
+
 	FTimerHandle restartHandle;
+
+	UPROPERTY(Transient)
+	bool TeamsReady;
 
 	UFUNCTION(Reliable, NetMulticast)
 	void TriggerRoundRestart();
@@ -59,7 +80,6 @@ private:
 
 	void SendClientsMessage(FString message);
 
-	//UFUNCTION(Server, Reliable, WithValidation)
 	UFUNCTION(Reliable, NetMulticast)
 	void RestartRound();
 
@@ -72,21 +92,6 @@ private:
 	UPROPERTY(Transient, Replicated)
 	FString originalMapName;
 
-	/**
-	* @return true if ActorToReset should have Reset() called on it while restarting the game,
-	*		   false if the GameMode will manually reset it or if the actor does not need to be reset
-	*/
-	bool ShouldReset(AActor* ActorToReset);
-
-	/*UPROPERTY(Transient, Replicated)
-	class ARoundManager_ForceRespawn *RoundManager;*/
-
-	/*UPROPERTY(Transient, Replicated)
-	class ANimModRoundManager *RoundManager;*/
-
-	UPROPERTY()
-	TArray<AActor *> currentRoundActors;
-
-	void InitializeRoundObjects_ForceRespawn();
-	void RestartRound_ForceRespawn();
+	UPROPERTY(Transient, Replicated)
+	class ARoundManager_ForceRespawn *RoundManager;
 };

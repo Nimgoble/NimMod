@@ -9,6 +9,7 @@
 #include "NimModTeamStart.h"
 #include "NimModSpectatorPawn.h"
 #include "VIPTrigger.h"
+#include "NimModTeam.h"
 #include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
 //#include "Runtime/Engine/Classes/Particles/ParticleEventManager.h"
 #include "Runtime/Engine/Classes/Lightmass/LightmassImportanceVolume.h"
@@ -18,6 +19,7 @@
 ARoundManager_ForceRespawn::ARoundManager_ForceRespawn(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	RoundCount = 0;
 }
 
 void ARoundManager_ForceRespawn::BeginPlay()
@@ -79,6 +81,17 @@ void ARoundManager_ForceRespawn::RestartRound()
 			FActorSpawnParameters spawnParams;
 			spawnParams.Template = A;
 
+			FString templateName = A->GetName();
+			FString currentNameTail = FString::Printf(TEXT("_R%d"), RoundCount);
+			FString newNameTail = FString::Printf(TEXT("_R%d"), (RoundCount + 1));
+
+			if (templateName.Contains(currentNameTail))
+				templateName.ReplaceInline(*currentNameTail, *newNameTail);
+			else
+				templateName += newNameTail;
+
+			spawnParams.Name = FName(*(templateName));
+
 			/*spawnParams.bNoFail = true;
 			spawnParams.bNoCollisionFail = true;
 			spawnParams.Name = NAME_None;*/
@@ -86,12 +99,12 @@ void ARoundManager_ForceRespawn::RestartRound()
 			FVector orig = A->GetActorLocation();
 			FRotator rot = A->GetActorRotation();
 			AActor *newActor = GetWorld()->SpawnActor
-				(
+			(
 				A->GetClass(),
 				&orig,
 				&rot,
 				spawnParams
-				);
+			);
 			if (newActor == nullptr)
 				continue;
 
@@ -120,6 +133,8 @@ void ARoundManager_ForceRespawn::RestartRound()
 		actor->Destroy();
 		actor = nullptr;
 	}
+
+	++RoundCount;
 }
 
 bool ARoundManager_ForceRespawn::ShouldReset(AActor* ActorToReset)
@@ -156,6 +171,7 @@ bool ARoundManager_ForceRespawn::ShouldReset(UWorld *world, AActor* ActorToReset
 		actorClass->IsChildOf(ANavigationData::StaticClass()) ||
 		actorClass->IsChildOf(AAtmosphericFog::StaticClass()) ||
 		actorClass->IsChildOf(ASpectatorPawn::StaticClass()) ||
+		actorClass->IsChildOf(ANimModTeam::StaticClass()) ||
 		/*#ifdef DEBUG*/
 		/*actorClass->IsChildOf(AGameplayDebuggingReplicator::StaticClass()) ||*/
 		/*#endif*/

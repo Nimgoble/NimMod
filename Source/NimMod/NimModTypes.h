@@ -68,13 +68,72 @@ namespace ENimModDialogType
 }
 
 UENUM(BlueprintType)
-enum class NimModTeam : uint8
+enum class ENimModTeam : uint8
 {
-	SPECTATORS UMETA(DisplayName = "Spectators"),
+	INVALID UMETA(DisplayName = "Invalid"),
 	ASSASSINS UMETA(DisplayName = "Assassins"),
 	BODYGUARDS UMETA(DisplayName = "Bodyguards"),
-	VIP UMETA(DisplayName = "VIP")
+	VIP UMETA(DisplayName = "VIP"),
+	SPECTATORS UMETA(DisplayName = "Spectators")
 };
+
+USTRUCT(blueprintable, meta = (DisplayName = "NimMod Team Info"))
+struct FNimModTeamInfo
+{
+	GENERATED_USTRUCT_BODY()
+
+	FNimModTeamInfo()
+	{
+		TeamNumber = ENimModTeam::INVALID;
+		TeamName = "INVALID";
+		TeamColor = FLinearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		MaxSpeed = 0.0f;
+	}
+
+	FNimModTeamInfo(ENimModTeam InTeamNumber, FString InTeamName, FLinearColor InTeamColor, float InMaxSpeed)
+	{
+		TeamNumber = InTeamNumber;
+		TeamName = InTeamName;
+		TeamColor = InTeamColor;
+		MaxSpeed = InMaxSpeed;
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+	ENimModTeam TeamNumber;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+	FString TeamName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+	FLinearColor TeamColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+	float MaxSpeed;
+
+	//TODO: Implement later.
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+	UNimModHUDLayoutWidget *HUDLayout;*/
+};
+
+//USTRUCT(blueprintable, meta = (DisplayName = "NimMod Team"))
+//struct FNimModTeam
+//{
+//	GENERATED_USTRUCT_BODY()
+//
+//	FNimModTeam()
+//	{
+//	}
+//
+//	FNimModTeam(FNimModTeamInfo InTeamInfo) : TeamInfo(InTeamInfo)
+//	{
+//	}
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+//	FNimModTeamInfo TeamInfo;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NimMod|Team")
+//	int32 TeamScore;
+//};
 
 UENUM(BlueprintType)
 enum class ENimModHUDMessageType : uint8

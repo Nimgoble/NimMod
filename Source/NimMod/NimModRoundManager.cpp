@@ -69,7 +69,7 @@ void ANimModRoundManager::BeginPlay()
 	//}
 
 	//InitializeRoundObjects_OverwriteWithArchive();
-	InitializeRoundObjects_ForceRespawn();
+	//InitializeRoundObjects_ForceRespawn();
 }
 
 //void ANimModRoundManager::BeginDestroy()

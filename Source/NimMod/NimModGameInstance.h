@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "NimModTeam.h"
+#include "NimModTypes.h"
 #include "Engine/GameInstance.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "../../Plugins/VaRest/Source/VaRestPlugin/Private/VaRestPluginPrivatePCH.h"
@@ -72,8 +74,11 @@ public:
 	/** virtual function to allow custom GameInstances an opportunity to do cleanup when shutting down */
 	virtual void Shutdown();
 
-	void SaveTeamScoresForRoundRestart(TArray<int32> teamScores);
-	TArray<int32> GetSavedTeamScores();
+	/*void SaveTeamScoresForRoundRestart(TArray<int32> teamScores);
+	TArray<int32> GetSavedTeamScores();*/
+
+	void SaveTeamsForRoundRestart(TArray<ANimModTeam *> teams);
+	TArray<ANimModTeam *> GetSavedTeams();
 
 	/*UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "UpdateServer"))
 	void HandleUpdateServer(FNimModServerInfo info);*/
@@ -133,6 +138,9 @@ private:
 	TQueue<FServerMessage, EQueueMode::Type::Mpsc> MessageQueue;
 	FCriticalSection messageLock;
 
+	/*UPROPERTY()
+	TArray<int32> SavedTeamScores;*/
+
 	UPROPERTY()
-	TArray<int32> SavedTeamScores;
+	TArray<ANimModTeam *> SavedTeams;
 };

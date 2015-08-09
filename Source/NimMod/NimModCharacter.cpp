@@ -1367,7 +1367,7 @@ void ANimModCharacter::Tick(float DeltaSeconds)
 			}
 		}
 		
-		if (MyPC->GetPlayerTeam() == NimModTeam::ASSASSINS)
+		if (MyPC->GetPlayerTeamNumber() == ENimModTeam::ASSASSINS)
 		{
 			//FName parameterName = TEXT("NimMod_Opacity");
 			//for (auto material : GetPawnMesh()->GetMaterials())

@@ -10,7 +10,7 @@
 #include "NimModTeamStart.h"
 #include "NimModSpectatorPawn.h"
 #include "VIPTrigger.h"
-#include "NimModRoundManager.h"
+#include "RoundManager.h"
 #include "RoundManager_ForceRespawn.h"
 #include "NimModGameInstance.h"
 #include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
@@ -53,13 +53,85 @@ ANimModGameMode::ANimModGameMode(const FObjectInitializer& ObjectInitializer)
 	bNeedsBotCreation = true;*/
 	bUseSeamlessTravel = true;
 	bStartPlayersAsSpectators = true;
+
+	/*SPECTATORS UMETA(DisplayName = "Spectators"),
+	ASSASSINS UMETA(DisplayName = "Assassins"),
+	BODYGUARDS UMETA(DisplayName = "Bodyguards"),
+	VIP UMETA(DisplayName = "VIP")*/
+	FNimModTeamInfo teamInvalid;
+	TeamDefinitions.Add(teamInvalid);
+	FNimModTeamInfo teamAssassins
+	(
+		ENimModTeam::ASSASSINS,
+		"Assassins",
+		FLinearColor(1.0f, 0.0f, 0.0f, 1.0f),
+		180.0f
+	);
+	TeamDefinitions.Add(teamAssassins);
+	FNimModTeamInfo teamBodyguards
+	(
+		ENimModTeam::BODYGUARDS,
+		"Bodyguards",
+		FLinearColor(0.0f, 0.0f, 1.0f, 1.0f),
+		180.0f
+	);
+	TeamDefinitions.Add(teamBodyguards);
+	FNimModTeamInfo teamVIP
+	(
+		ENimModTeam::VIP,
+		"VIP",
+		FLinearColor(1.0f, 1.0f, 1.0f, 1.0f),
+		180.0f
+	);
+	TeamDefinitions.Add(teamVIP);
+	FNimModTeamInfo teamSpectators
+	(
+		ENimModTeam::SPECTATORS,
+		"Spectators",
+		FLinearColor(0.68f, 0.68f, 0.0f, 1.0f),
+		180.0f
+	);
+	TeamDefinitions.Add(teamSpectators);
+	//Teams.Init(TeamDefinitions.Num());
 }
 
+void ANimModGameMode::BeginPlay()
+{
+	for (auto teamDefinition : TeamDefinitions)
+	{
+		FActorSpawnParameters SpawnInfo;
+		SpawnInfo.Instigator = Instigator;
+		SpawnInfo.ObjectFlags |= RF_Transient;
+		FText ourName = FText::Format(FText::FromString(TEXT("Team_{0}")), FText::FromString(teamDefinition.TeamName));
+		SpawnInfo.Name = FName(*(ourName.ToString()));
+		ANimModTeam *team = GetWorld()->SpawnActor<ANimModTeam>(ANimModTeam::StaticClass(), SpawnInfo);
+		team->SetTeamInfo(teamDefinition);
+		Teams.Add(team);
+	}
+
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Instigator = Instigator;
+	SpawnInfo.ObjectFlags |= RF_Transient;
+	SpawnInfo.Name = FName(*(FText::FromString(TEXT("RoundManager_MAIN")).ToString()));
+	RoundManager = GetWorld()->SpawnActor<ARoundManager_ForceRespawn>(ARoundManager_ForceRespawn::StaticClass(), SpawnInfo);
+
+	if (GameState)
+	{
+		ANimModGameState *gameState = Cast<ANimModGameState>(GameState);
+		if (gameState)
+		{
+			gameState->SetTeams(Teams);
+			gameState->SetRoundManager(RoundManager);
+		}
+	}
+}
 void ANimModGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	/*const int32 BotsCountOptionValue = GetIntOption(Options, GetBotsCountOptionName(), 0);*/
 	Super::InitGame(MapName, Options, ErrorMessage);
 	//GetServerIP();
+
+	//Teams.Empty();
 
 	/*const UGameInstance* GI = GetGameInstance();
 	if (GI && Cast<UNimModInstance>(GI)->GetIsOnline())
@@ -303,15 +375,17 @@ void ANimModGameMode::PostSeamlessTravel()
 	ANimModGameState *gameState = GetGameState();
 	if (gameInstance && gameState)
 	{
-		TArray<int32> savedTeamScores = gameInstance->GetSavedTeamScores();
+		//TArray<int32> savedTeamScores = gameInstance->GetSavedTeamScores();
+		TArray<ANimModTeam *> savedTeams = gameInstance->GetSavedTeams();
 
-		if (savedTeamScores.Num() != gameState->TeamScores.Num())
-			return;
+		gameState->SetTeams(savedTeams);
+		/*if (savedTeamScores.Num() != gameState->TeamScores.Num())
+			return;*/
 
-		for (int i = 0; i <= (int32)NimModTeam::VIP; ++i)
+		/*for (int i = 0; i <= (int32)ENimModTeam::VIP; ++i)
 		{
 			gameState->TeamScores[i] = savedTeamScores[i];
-		}
+		}*/
 	}
 }
 
@@ -320,7 +394,8 @@ bool ANimModGameMode::PlayerCanRestart_Implementation(APlayerController* Player)
 	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(Player);
 	if (NewPC)
 	{
-		if (NewPC->GetPlayerTeam() == NimModTeam::SPECTATORS && !NewPC->HasHadInitialSpawn())
+		ENimModTeam teamNumber = NewPC->GetPlayerTeamNumber();
+		if ((teamNumber == ENimModTeam::INVALID || teamNumber == ENimModTeam::SPECTATORS) && !NewPC->HasHadInitialSpawn())
 			return false;
 	}
 
@@ -333,7 +408,7 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 
 	ANimModPlayerState* KillerPlayerState = Killer ? Cast<ANimModPlayerState>(Killer->PlayerState) : NULL;
 	ANimModPlayerState* VictimPlayerState = KilledPlayer ? Cast<ANimModPlayerState>(KilledPlayer->PlayerState) : NULL;
-	bool isVIPKill = (VictimPlayerState == NULL) ? false : VictimPlayerState->GetTeam() == NimModTeam::VIP;
+	bool isVIPKill = (VictimPlayerState == NULL) ? false : VictimPlayerState->GetTeam() == ENimModTeam::VIP;
 	int32 score = 1;
 
 	ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
@@ -342,7 +417,7 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 	{
 		KillerPlayerState->ScoreKill(VictimPlayerState, KillScore);
 		KillerPlayerState->InformAboutKill(KillerPlayerState, DamageType, VictimPlayerState);
-		if (isVIPKill && KillerPlayerState->GetTeam() == NimModTeam::ASSASSINS)
+		if (isVIPKill && KillerPlayerState->GetTeam() == ENimModTeam::ASSASSINS)
 			KillerPlayerState->ScorePoints(10);
 	}
 
@@ -354,8 +429,8 @@ void ANimModGameMode::Killed(AController* Killer, AController* KilledPlayer, APa
 
 	if (isVIPKill)
 	{
-		int32 teamIndex = ((int32)NimModTeam::ASSASSINS);
-		gameState->TeamScores[teamIndex] += score;
+		int32 teamIndex = ((int32)ENimModTeam::ASSASSINS);
+		gameState->Teams[teamIndex]->TeamScore += score;
 		gameState->VIPKilled();
 	}
 }
@@ -388,11 +463,11 @@ float ANimModGameMode::ModifyDamage(float Damage, AActor* DamagedActor, struct F
 
 bool ANimModGameMode::CanDealDamage(class ANimModPlayerState* DamageInstigator, class ANimModPlayerState* DamagedPlayer) const
 {
-	NimModTeam instigatorTeam = DamageInstigator->GetTeam();
-	NimModTeam damagedTeam = DamagedPlayer->GetTeam();
+	ENimModTeam instigatorTeam = DamageInstigator->GetTeam();
+	ENimModTeam damagedTeam = DamagedPlayer->GetTeam();
 
 	//Can't damage or be damaged by spectators
-	if (instigatorTeam == NimModTeam::SPECTATORS || damagedTeam == NimModTeam::SPECTATORS)
+	if (instigatorTeam == ENimModTeam::SPECTATORS || damagedTeam == ENimModTeam::SPECTATORS)
 		return false;
 
 	//Can't damage your own team
@@ -402,8 +477,8 @@ bool ANimModGameMode::CanDealDamage(class ANimModPlayerState* DamageInstigator, 
 	//VIP and Bodyguards can't damage each other
 	if
 	(
-		(instigatorTeam == NimModTeam::BODYGUARDS && damagedTeam == NimModTeam::VIP) ||
-		(instigatorTeam == NimModTeam::VIP && damagedTeam == NimModTeam::BODYGUARDS)
+		(instigatorTeam == ENimModTeam::BODYGUARDS && damagedTeam == ENimModTeam::VIP) ||
+		(instigatorTeam == ENimModTeam::VIP && damagedTeam == ENimModTeam::BODYGUARDS)
 	)
 		return false;
 
@@ -460,7 +535,6 @@ AActor* ANimModGameMode::ChoosePlayerStart_Implementation(AController* Player)
 			}
 		}
 	}
-
 
 	if (BestStart == NULL)
 	{
@@ -583,7 +657,7 @@ void ANimModGameMode::BroadcastHUDMessage(ANimModPlayerController *controller, F
 
 			if (message.MessageType == ENimModHUDMessageType::TeamChat)
 			{
-				if (message.Sender != nullptr && PlayerController->GetPlayerTeam() == message.Sender->GetTeam())
+				if (message.Sender != nullptr && PlayerController->GetPlayerTeamNumber() == message.Sender->GetTeam())
 					PlayerController->ClientHUDMessage(message);
 			}
 			else
@@ -594,6 +668,7 @@ void ANimModGameMode::BroadcastHUDMessage(ANimModPlayerController *controller, F
 
 void ANimModGameMode::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
 {
+	ActorList.Append(Teams);
 	for (FActorIterator It(GetWorld()); It; ++It)
 	{
 		AActor* A = *It;
@@ -628,78 +703,6 @@ bool ANimModGameMode::ShouldActorTravel(AActor *Actor)
 
 	return false;
 }
-
-//void ANimModGameMode::RegisterServer(FString serverName, FString mapName, int32 maxNumberOfPlayers, bool isLAN)
-//{
-//	//We don't register LAN servers with the master server.
-//	if (isLAN)
-//		return;
-//
-//	if (GameSession != NULL && GetWorld()->GetNetMode() == NM_DedicatedServer)
-//	{
-//		ANimModGameSession* gameSession = Cast<ANimModGameSession>(GameSession);
-//		if (gameSession)
-//		{
-//			gameSession->RegisterNimModServer(ServerIP, serverName, mapName, maxNumberOfPlayers);
-//			/*FTimerHandle TempHandle;
-//			GetWorldTimerManager().SetTimer(TempHandle, this, &AUTGameMode::UpdateOnlineServer, 60.0f);
-//
-//			if (UTGameSession->bSessionValid)
-//			{
-//				NotifyLobbyGameIsReady();
-//			}*/
-//		}
-//	}
-//}
-//
-//void ANimModGameMode::UnRegisterServer()
-//{
-//	if (GameSession != NULL && GetWorld()->GetNetMode() == NM_DedicatedServer)
-//	{
-//		ANimModGameSession* gameSession = Cast<ANimModGameSession>(GameSession);
-//		if (gameSession)
-//		{
-//			gameSession->UnRegisterServer();
-//		}
-//	}
-//}
-//
-/////RAMA
-//bool ANimModGameMode::GetServerIP()
-//{
-//	FHttpModule* Http = &FHttpModule::Get();
-//
-//	if (!Http)
-//	{
-//		return false;
-//	}
-//
-//	if (!Http->IsHttpEnabled())
-//	{
-//		return false;
-//	}
-//	//~~~~~~~~~~~~~~~~~~~
-//
-//	FString TargetHost = "http://api.ipify.org";
-//	TSharedRef < IHttpRequest > Request = Http->CreateRequest();
-//	Request->SetVerb("GET");
-//	Request->SetURL(TargetHost);
-//	Request->SetHeader("User-Agent", "NimMod/1.0");
-//	Request->SetHeader("Content-Type", "text/html");
-//
-//	Request->OnProcessRequestComplete().BindUObject(this, &ANimModGameMode::GetServerIPResponseReceived);
-//	if (!Request->ProcessRequest())
-//	{
-//		return false;
-//	}
-//
-//	return true;
-//}
-//
-//void ANimModGameMode::GetServerIPResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-//{
-//	ServerIP = Response->GetContentAsString();
-//}
 
 /** Does end of game handling for the online layer */
 void ANimModGameMode::RestartPlayer(class AController* NewPlayer)

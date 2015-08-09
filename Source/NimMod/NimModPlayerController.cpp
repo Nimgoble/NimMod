@@ -208,8 +208,8 @@ void ANimModPlayerController::UnFreeze()
 	if (!bHasHadInitialSpawn)
 		bHasHadInitialSpawn = true;
 
-	NimModTeam currentTeam = GetPlayerTeam();
-	if (currentTeam != NimModTeam::SPECTATORS)
+	ENimModTeam currentTeam = GetPlayerTeamNumber();
+	if (currentTeam != ENimModTeam::SPECTATORS)
 		ServerRestartPlayer();
 	else
 		StartSpectating();
@@ -1371,18 +1371,21 @@ void ANimModPlayerController::PreClientTravel(const FString& PendingURL, ETravel
 	}
 }
 
-bool ANimModPlayerController::SetPlayerTeam_Validate(NimModTeam team)
+bool ANimModPlayerController::SetPlayerTeam_Validate(ENimModTeam team)
 {
-	return GetPlayerTeam() != team;
+	ANimModTeam *currentTeam = GetPlayerTeam();
+	return (currentTeam != nullptr) ? currentTeam->TeamInfo.TeamNumber != team : true;
 }
 
-void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
+void ANimModPlayerController::SetPlayerTeam_Implementation(ENimModTeam team)
 {
-	NimModTeam currentTeam = GetPlayerTeam();
-	if (currentTeam == team)
+	ANimModTeam *currentTeam = GetPlayerTeam();
+	ENimModTeam teamNumber = (currentTeam != nullptr) ? currentTeam->TeamInfo.TeamNumber : ENimModTeam::INVALID;
+
+	if (teamNumber == team)
 		return;
 
-	if (currentTeam == NimModTeam::SPECTATORS || !bHasHadInitialSpawn)
+	if (teamNumber == ENimModTeam::SPECTATORS || !bHasHadInitialSpawn)
 	{
 		GetNimModPlayerState()->SetTeam(team);
 		UnFreeze();
@@ -1403,10 +1406,20 @@ void ANimModPlayerController::SetPlayerTeam_Implementation(NimModTeam team)
 		
 }
 
-NimModTeam ANimModPlayerController::GetPlayerTeam()
+ANimModTeam *ANimModPlayerController::GetPlayerTeam()
 {
 	ANimModPlayerState *playerState = GetNimModPlayerState();
-	return (playerState != nullptr) ? playerState->GetTeam() : NimModTeam::SPECTATORS;
+	if (playerState == nullptr)
+		return nullptr;
+
+	ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
+	return (gameState) ? gameState->GetTeam(playerState->GetTeam()) : nullptr;
+}
+
+ENimModTeam ANimModPlayerController::GetPlayerTeamNumber()
+{
+	ANimModTeam *currentTeam = GetPlayerTeam();
+	return (currentTeam != nullptr) ? currentTeam->TeamInfo.TeamNumber : ENimModTeam::INVALID;
 }
 
 void ANimModPlayerController::StartSpectating()
@@ -1427,7 +1440,7 @@ void ANimModPlayerController::StartSpectating()
 }
 bool ANimModPlayerController::IsSpectating()
 {
-	return IsInState(NAME_Spectating) || GetPlayerTeam() == NimModTeam::SPECTATORS;
+	return IsInState(NAME_Spectating) || GetPlayerTeamNumber() == ENimModTeam::SPECTATORS;
 }
 void ANimModPlayerController::SpecNext()
 {

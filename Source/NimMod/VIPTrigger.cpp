@@ -29,13 +29,13 @@ void AVIPTrigger::ActorEnteredVolume(class AActor* Other)
 	if (!pc || !pc->PlayerState)
 		return;
 
-	if (pc->GetPlayerTeam() == NimModTeam::VIP)
+	if (pc->GetPlayerTeamNumber() == ENimModTeam::VIP)
 	{
 		pc->GetNimModPlayerState()->ScorePoints(10);
 		//Add to their score
 		ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
-		int32 teamIndex = ((int32)NimModTeam::BODYGUARDS);
-		gameState->TeamScores[teamIndex] += 1;
+		int32 teamIndex = ((int32)ENimModTeam::BODYGUARDS);
+		gameState->Teams[teamIndex]->TeamScore += 1;
 		gameState->VIPEscaped();
 
 	}

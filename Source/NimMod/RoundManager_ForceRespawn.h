@@ -23,4 +23,7 @@ private:
 
 	UPROPERTY()
 	TArray<AActor *> currentRoundActors;
+
+	UPROPERTY()
+	int32 RoundCount;
 };

@@ -4,6 +4,7 @@
 #include "Runtime/Online/OnlineSubsystem/Public/Online.h"
 #include "NimModHUD.h"
 #include "NimModLocalPlayer.h"
+#include "NimModTeam.h"
 #include "NimModTypes.h"
 #include "NimModWidgetBase.h"
 #include "NimModPlayerController.generated.h"
@@ -129,10 +130,13 @@ public:
 	UNimModWidgetBase *ScoreBoard;
 
 	UFUNCTION(BlueprintCallable, Server, reliable, WithValidation, Category = "UI")
-	void SetPlayerTeam(NimModTeam team);
+	void SetPlayerTeam(ENimModTeam team);
 
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	NimModTeam GetPlayerTeam();
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player|Team")
+	ANimModTeam *GetPlayerTeam();
+
+	UFUNCTION(BlueprintCallable, Category = "NimMod|Player|Team")
+	ENimModTeam GetPlayerTeamNumber();
 
 	void StartSpectating();
 	bool IsSpectating();

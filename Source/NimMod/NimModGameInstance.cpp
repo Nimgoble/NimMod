@@ -252,14 +252,24 @@ void UNimModGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
-void UNimModGameInstance::SaveTeamScoresForRoundRestart(TArray<int32> teamScores)
+//void UNimModGameInstance::SaveTeamScoresForRoundRestart(TArray<int32> teamScores)
+//{
+//	SavedTeamScores = teamScores;
+//}
+//
+//TArray<int32> UNimModGameInstance::GetSavedTeamScores()
+//{
+//	return SavedTeamScores;
+//}
+
+void UNimModGameInstance::SaveTeamsForRoundRestart(TArray<ANimModTeam *> teams)
 {
-	SavedTeamScores = teamScores;
+	SavedTeams = teams;
 }
 
-TArray<int32> UNimModGameInstance::GetSavedTeamScores()
+TArray<ANimModTeam *> UNimModGameInstance::GetSavedTeams()
 {
-	return SavedTeamScores;
+	return SavedTeams;
 }
 
 void UNimModGameInstance::ProcessPendingMessages()

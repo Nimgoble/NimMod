@@ -4,6 +4,8 @@
 
 ARoundManager::ARoundManager(const FObjectInitializer& ObjectInitializer)
 {
+	bReplicates = true;
+	bAlwaysRelevant = true;
 }
 
 void ARoundManager::RestartRound()
