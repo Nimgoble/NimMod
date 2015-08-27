@@ -60,3 +60,4 @@ Binaries/Win64/NimMod-Win64-DebugGame.exe
 *.pdb
 *.pdb
 *.pdb
+Content/NimMod/Maps/Nim_City.umap
