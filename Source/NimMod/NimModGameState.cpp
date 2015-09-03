@@ -4,7 +4,7 @@
 #include "NimModGameState.h"
 #include "NimModGameMode.h"
 #include "NimModPlayerController.h"
-#include "RoundManager_ForceRespawn.h"
+#include "RoundManager.h"
 #include "NimModGameInstance.h"
 //Includes for the ShouldReset
 #include "NimModHUD.h"
@@ -23,21 +23,9 @@
 
 ANimModGameState::ANimModGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	//ARoundManager_ForceRespawn::StaticClass();
-	//NumTeams = 4;
 	RemainingTime = 0;
 	bTimerPaused = false;
 	TeamsReady = false;
-	/*for (int i = 0; i <= (int32)ENimModTeam::VIP; ++i)
-	{
-		TeamScores.Add(0);
-	}*/
-
-	//if (!HasAnyFlags(RF_TagGarbageTemp))
-	//{
-	//	//RoundManager = NewObject<ARoundManager_ForceRespawn>(GetWorld());
-	//	RoundManager = NewObject<ANimModRoundManager>(GetWorld());
-	//}
 }
 
 void ANimModGameState::PostInitializeComponents()
@@ -47,36 +35,7 @@ void ANimModGameState::PostInitializeComponents()
 
 void ANimModGameState::BeginPlay()
 {
-	
-	/*if (ISSERVER)
-	{
-		UE_LOG(LogNimMod, Warning, TEXT("Game State BeginPlay on Server"));
-	}
-	else
-	{
-		UE_LOG(LogNimMod, Warning, TEXT("Game State BeginPlay on Client"));
-	}*/
 	Super::BeginPlay();
-
-	//if (AuthorityGameMode)
-	//{
-	//	// we are server, tell the gamemode
-	//	ANimModGameMode* const GameMode = Cast<ANimModGameMode>(AuthorityGameMode);
-	//	if (GameMode)
-	//	{
-	//		for (auto teamDefinition : GameMode->TeamDefinitions)
-	//		{
-	//			FActorSpawnParameters SpawnInfo;
-	//			SpawnInfo.Instigator = Instigator;
-	//			SpawnInfo.ObjectFlags |= RF_Transient;
-	//			ANimModTeam *team = GetWorld()->SpawnActor<ANimModTeam>(ANimModTeam::StaticClass(), SpawnInfo);
-	//			//NewObject<ANimModTeam>((UObject*)GetTransientPackage(), NAME_None, RF_Transient);
-	//			team->SetTeamInfo(teamDefinition);
-	//			Teams.Add(team);
-	//		}
-	//	}
-	//}
-	//InitializeRoundObjects_ForceRespawn();
 }
 
 void ANimModGameState::OnRep_Teams(TArray<ANimModTeam *> replicatedTeams)
@@ -103,7 +62,7 @@ void ANimModGameState::SetTeams(TArray<ANimModTeam *> InTeams)
 		TeamsReady = true;
 }
 
-void ANimModGameState::SetRoundManager(class ARoundManager_ForceRespawn *NewRoundManager)
+void ANimModGameState::SetRoundManager(class ARoundManager *NewRoundManager)
 {
 	RoundManager = NewRoundManager;
 }
@@ -209,14 +168,14 @@ void ANimModGameState::OnRestartTimerExpired()
 {
 	GetWorld()->GetTimerManager().ClearTimer(restartHandle);
 
-	/*if (ISSERVER)
+	if (ISSERVER)
 	{
 		UNimModGameInstance *gameInstance = Cast<UNimModGameInstance>(GetGameInstance());
 		if (gameInstance)
 		{
 			gameInstance->SaveTeamsForRoundRestart(this->Teams);
 		}
-	}*/
+	}
 
 	UWorld *world = GetWorld();
 	if (world != nullptr)
@@ -267,11 +226,12 @@ void ANimModGameState::SendClientsMessage(FString message)
 
 void ANimModGameState::RestartRound_Implementation()
 {
-	/*RestartRound_ForceRespawn();
-	return;*/
 
 	if (ISSERVER && RoundManager != nullptr)
+	{
 		RoundManager->RestartRound();
+		//return;
+	}
 
 	ALevelScriptActor* LevelScript = GetWorld()->GetLevelScriptActor();
 	if (LevelScript)
@@ -297,18 +257,6 @@ void ANimModGameState::RestartRound_Implementation()
 				Controller->Reset();
 		}
 	}
-
-	/*UWorld *world = GetWorld();
-	if (world != nullptr)
-	{
-		originalMapName = world->GetCurrentLevel()->GetOutermost()->GetName();
-		if (GetWorld()->IsPlayInEditor())
-		{
-			FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(world);
-			originalMapName = world->StripPIEPrefixFromPackageName(originalMapName, world->BuildPIEPackagePrefix(WorldContext.PIEInstance));
-		}
-		world->SeamlessTravel(originalMapName);
-	}*/
 }
 
 void ANimModGameState::FreezePlayers_Implementation()

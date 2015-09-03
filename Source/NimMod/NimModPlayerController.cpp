@@ -166,7 +166,7 @@ void ANimModPlayerController::QueryAchievements()
 			IOnlineIdentityPtr Identity = OnlineSub->GetIdentityInterface();
 			if (Identity.IsValid())
 			{
-				TSharedPtr<FUniqueNetId> UserId = Identity->GetUniquePlayerId(LocalPlayer->GetControllerId());
+				TSharedPtr<const FUniqueNetId> UserId = Identity->GetUniquePlayerId(LocalPlayer->GetControllerId());
 
 				if (UserId.IsValid())
 				{
@@ -312,7 +312,7 @@ void ANimModPlayerController::OnKill()
 		if (LocalPlayer)
 		{
 			int32 UserIndex = LocalPlayer->GetControllerId();
-			TSharedPtr<FUniqueNetId> UniqueID = Identity->GetUniquePlayerId(UserIndex);
+			TSharedPtr<const FUniqueNetId> UniqueID = Identity->GetUniquePlayerId(UserIndex);
 			if (UniqueID.IsValid())
 			{
 				ANimModCharacter* Pawn = Cast<ANimModCharacter>(GetCharacter());
@@ -362,7 +362,7 @@ void ANimModPlayerController::OnDeathMessage(class ANimModPlayerState* KillerPla
 			if (Events.IsValid() && Identity.IsValid())
 			{
 				const int32 UserIndex = LocalPlayer->GetControllerId();
-				TSharedPtr<FUniqueNetId> UniqueID = Identity->GetUniquePlayerId(UserIndex);
+				TSharedPtr<const FUniqueNetId> UniqueID = Identity->GetUniquePlayerId(UserIndex);
 				if (UniqueID.IsValid())
 				{
 					ANimModCharacter* Pawn = Cast<ANimModCharacter>(GetCharacter());
@@ -403,7 +403,7 @@ void ANimModPlayerController::UpdateAchievementProgress(const FString& Id, float
 			IOnlineIdentityPtr Identity = OnlineSub->GetIdentityInterface();
 			if (Identity.IsValid())
 			{
-				TSharedPtr<FUniqueNetId> UserId = LocalPlayer->GetCachedUniqueNetId();
+				TSharedPtr<const FUniqueNetId> UserId = LocalPlayer->GetCachedUniqueNetId();
 
 				if (UserId.IsValid())
 				{
@@ -1074,7 +1074,7 @@ bool ANimModPlayerController::SetPause(bool bPause, FCanUnpause CanUnpauseDelega
 	const auto PresenceInterface = Online::GetPresenceInterface();
 	const auto Events = Online::GetEventsInterface();
 	const auto LocalPlayer = Cast<ULocalPlayer>(Player);
-	TSharedPtr<FUniqueNetId> UserId = LocalPlayer ? LocalPlayer->GetCachedUniqueNetId() : nullptr;
+	TSharedPtr<const FUniqueNetId> UserId = LocalPlayer ? LocalPlayer->GetCachedUniqueNetId() : nullptr;
 
 	if (PresenceInterface.IsValid() && UserId.IsValid())
 	{

@@ -12,6 +12,7 @@
 #include "VIPTrigger.h"
 #include "RoundManager.h"
 #include "RoundManager_ForceRespawn.h"
+#include "RoundManager_SeemlessLevelTravel.h"
 #include "NimModGameInstance.h"
 #include "Runtime/Engine/Classes/GameFramework/GameNetworkManager.h"
 //#include "Runtime/Engine/Classes/Particles/ParticleEventManager.h"
@@ -46,6 +47,7 @@ ANimModGameMode::ANimModGameMode(const FObjectInitializer& ObjectInitializer)
 	PlayerStateClass = ANimModPlayerState::StaticClass();
 	SpectatorClass = ANimModSpectatorPawn::StaticClass();
 	GameStateClass = ANimModGameState::StaticClass();
+	RoundManagerClass = ARoundManager_SeemlessLevelTravel::StaticClass();
 
 	MinRespawnDelay = 5.0f;
 
@@ -101,6 +103,7 @@ void ANimModGameMode::BeginPlay()
 	{
 		FActorSpawnParameters SpawnInfo;
 		SpawnInfo.Instigator = Instigator;
+		//SpawnInfo.ObjectFlags |= (RF_Transient | RF_RootSet);
 		SpawnInfo.ObjectFlags |= RF_Transient;
 		FText ourName = FText::Format(FText::FromString(TEXT("Team_{0}")), FText::FromString(teamDefinition.TeamName));
 		SpawnInfo.Name = FName(*(ourName.ToString()));
@@ -113,7 +116,7 @@ void ANimModGameMode::BeginPlay()
 	SpawnInfo.Instigator = Instigator;
 	SpawnInfo.ObjectFlags |= RF_Transient;
 	SpawnInfo.Name = FName(*(FText::FromString(TEXT("RoundManager_MAIN")).ToString()));
-	RoundManager = GetWorld()->SpawnActor<ARoundManager_ForceRespawn>(ARoundManager_ForceRespawn::StaticClass(), SpawnInfo);
+	RoundManager = GetWorld()->SpawnActor<ARoundManager>(RoundManagerClass, SpawnInfo);
 
 	if (GameState)
 	{
@@ -318,7 +321,7 @@ bool ANimModGameMode::IsWinner(class ANimModPlayerState* PlayerState) const
 	return false;
 }
 
-void ANimModGameMode::PreLogin(const FString& Options, const FString& Address, const TSharedPtr<FUniqueNetId>& UniqueId, FString& ErrorMessage)
+void ANimModGameMode::PreLogin(const FString& Options, const FString& Address, const TSharedPtr<const FUniqueNetId>& UniqueId, FString& ErrorMessage)
 {
 	ANimModGameState* const MyGameState = Cast<ANimModGameState>(GameState);
 	const bool bMatchIsOver = MyGameState && MyGameState->HasMatchEnded();
@@ -668,13 +671,13 @@ void ANimModGameMode::BroadcastHUDMessage(ANimModPlayerController *controller, F
 
 void ANimModGameMode::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
 {
-	ActorList.Append(Teams);
+	/*ActorList.Append(Teams);
 	for (FActorIterator It(GetWorld()); It; ++It)
 	{
 		AActor* A = *It;
 		if (A && ShouldActorTravel(A))
 			ActorList.Add(A);
-	}
+	}*/
 }
 
 bool ANimModGameMode::ShouldActorTravel(AActor *Actor)

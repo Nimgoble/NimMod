@@ -22,7 +22,7 @@ public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	/** Accept or reject a player attempting to join the server.  Fails login if you set the ErrorMessage to a non-empty string. */
-	virtual void PreLogin(const FString& Options, const FString& Address, const TSharedPtr<class FUniqueNetId>& UniqueId, FString& ErrorMessage) override;
+	virtual void PreLogin(const FString& Options, const FString& Address, const TSharedPtr<const FUniqueNetId>& UniqueId, FString& ErrorMessage) override;
 
 	/** starts match warmup */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
@@ -126,6 +126,9 @@ protected:
 	/** Returns game session class to use */
 	virtual TSubclassOf<AGameSession> GetGameSessionClass() const override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "NimMod|Round")
+	TSubclassOf<class ARoundManager> RoundManagerClass;
+
 public:
 
 	/** Does end of game handling for the online layer */
@@ -148,7 +151,7 @@ public:
 private:
 	TArray<ANimModTeam *> Teams;
 
-	class ARoundManager_ForceRespawn *RoundManager;
+	class ARoundManager *RoundManager;
 };
 
 

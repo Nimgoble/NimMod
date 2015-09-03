@@ -211,7 +211,7 @@ void ANimModPlayerState::InformAboutKill_Implementation(class ANimModPlayerState
 			{
 				// a local player might not have an ID if it was created with CreateDebugPlayer.
 				ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(TestPC->Player);
-				TSharedPtr<FUniqueNetId> LocalID = LocalPlayer->GetCachedUniqueNetId();
+				TSharedPtr<const FUniqueNetId> LocalID = LocalPlayer->GetCachedUniqueNetId();
 				if (LocalID.IsValid() && *LocalPlayer->GetCachedUniqueNetId() == *KillerPlayerState->UniqueId)
 				{
 					TestPC->OnKill();

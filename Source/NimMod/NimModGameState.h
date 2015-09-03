@@ -33,7 +33,7 @@ public:
 	void SetTeams(TArray<ANimModTeam *> InTeams);
 
 	UFUNCTION()
-	void SetRoundManager(class ARoundManager_ForceRespawn *NewRoundManager);
+	void SetRoundManager(class ARoundManager *NewRoundManager);
 
 	/** number of teams in current game (doesn't deprecate when no players are left in a team) */
 	/*UPROPERTY(Transient, Replicated)
@@ -90,8 +90,5 @@ private:
 	void UnfreezePlayers();
 
 	UPROPERTY(Transient, Replicated)
-	FString originalMapName;
-
-	UPROPERTY(Transient, Replicated)
-	class ARoundManager_ForceRespawn *RoundManager;
+	class ARoundManager *RoundManager;
 };
