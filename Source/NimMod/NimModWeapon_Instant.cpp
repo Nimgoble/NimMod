@@ -9,6 +9,9 @@
 ANimModWeapon_Instant::ANimModWeapon_Instant(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	CurrentFiringSpread = 0.0f;
+	InstantConfig.NumberOfBulletsPerShot = 1;
+	CurrentViewPunchTotal.X = 0;
+	CurrentViewPunchTotal.Y = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -16,20 +19,26 @@ ANimModWeapon_Instant::ANimModWeapon_Instant(const FObjectInitializer& ObjectIni
 
 void ANimModWeapon_Instant::FireWeapon()
 {
-	const int32 RandomSeed = FMath::Rand();
-	FRandomStream WeaponRandomStream(RandomSeed);
-	const float CurrentSpread = GetCurrentSpread();
-	const float ConeHalfAngle = FMath::DegreesToRadians(CurrentSpread * 0.5f);
+	const FWeaponSpreadAndRecoilState &spreadAndRecoilStateInformation = GetCurrentRecoilAndSpreadState();
+	for (int i = 0; i < InstantConfig.NumberOfBulletsPerShot; ++i)
+	{
+		const int32 RandomSeed = FMath::Rand();
+		FRandomStream WeaponRandomStream(RandomSeed);
+		const float CurrentSpread = GetCurrentSpread(spreadAndRecoilStateInformation);
+		const float ConeHalfAngle = FMath::DegreesToRadians(CurrentSpread * 0.5f);
 
-	const FVector AimDir = GetAdjustedAim();
-	const FVector StartTrace = GetCameraDamageStartLocation(AimDir);
-	const FVector ShootDir = WeaponRandomStream.VRandCone(AimDir, ConeHalfAngle, ConeHalfAngle);
-	const FVector EndTrace = StartTrace + ShootDir * InstantConfig.WeaponRange;
+		const FVector AimDir = GetAdjustedAim();
+		const FVector StartTrace = GetCameraDamageStartLocation(AimDir);
+		const FVector ShootDir = WeaponRandomStream.VRandCone(AimDir, ConeHalfAngle, ConeHalfAngle);
+		const FVector EndTrace = StartTrace + ShootDir * InstantConfig.WeaponRange;
 
-	const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
-	ProcessInstantHit(Impact, StartTrace, ShootDir, RandomSeed, CurrentSpread);
-
-	CurrentFiringSpread = FMath::Min(InstantConfig.FiringSpreadMax, CurrentFiringSpread + InstantConfig.FiringSpreadIncrement);
+		const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
+		ProcessInstantHit(Impact, StartTrace, ShootDir, RandomSeed, CurrentSpread);
+	}
+	//ViewPunch
+	FVector2D nextViewPunch = CalculateNextViewPunch(spreadAndRecoilStateInformation);
+	MyPawn->AddViewPunch(nextViewPunch);
+	CurrentViewPunchTotal += nextViewPunch;
 }
 
 bool ANimModWeapon_Instant::ServerNotifyHit_Validate(const FHitResult Impact, FVector_NetQuantizeNormal ShootDir, int32 RandomSeed, float ReticleSpread)
@@ -218,21 +227,72 @@ void ANimModWeapon_Instant::OnBurstFinished()
 	Super::OnBurstFinished();
 
 	CurrentFiringSpread = 0.0f;
+	CurrentViewPunchTotal.X = 0.0f;
+	CurrentViewPunchTotal.Y = 0.0f;
 }
 
 
 //////////////////////////////////////////////////////////////////////////
 // Weapon usage helpers
 
-float ANimModWeapon_Instant::GetCurrentSpread() const
+float ANimModWeapon_Instant::GetCurrentSpread(const FWeaponSpreadAndRecoilState &spreadAndRecoilStateInformation)
 {
-	float FinalSpread = InstantConfig.WeaponSpread + CurrentFiringSpread;
-	if (MyPawn && MyPawn->IsTargeting())
-	{
-		FinalSpread *= InstantConfig.TargetingSpreadMod;
-	}
+	float newRandomSpread = FMath::FRandRange
+	(
+		spreadAndRecoilStateInformation.WeaponSpreadInfo.Min,
+		spreadAndRecoilStateInformation.WeaponSpreadInfo.Max
+	);
 
-	return FinalSpread;
+	float maxNewSpread = spreadAndRecoilStateInformation.WeaponSpreadInfo.MaxTotal - CurrentFiringSpread;
+
+	CurrentFiringSpread += FMath::Min(newRandomSpread, maxNewSpread);
+
+	return CurrentFiringSpread;
+}
+
+const FWeaponSpreadAndRecoilState& ANimModWeapon_Instant::GetCurrentRecoilAndSpreadState()
+{
+	bool crouched = MyPawn->IsCrouched();
+	bool walking = MyPawn->IsMoving();
+	bool inAir = MyPawn->IsInAir();
+
+	//Are we in the air?
+	if (inAir)
+	{
+		return InstantConfig.SpreadAndRecoilStates.InAirInfo;
+	}
+	else if (walking)
+	{
+		//We're not in the air, and we're moving(crouched or not)
+		return InstantConfig.SpreadAndRecoilStates.MovingInfo;
+	}
+	else if (crouched)
+	{
+		//Crouched and not moving
+		return InstantConfig.SpreadAndRecoilStates.CrouchingInfo;
+	}
+	else
+	{
+		//Standing still, not crouched.
+		return InstantConfig.SpreadAndRecoilStates.StandingStillInfo;
+	}
+}
+
+FVector2D ANimModWeapon_Instant::CalculateNextViewPunch(const FWeaponSpreadAndRecoilState &spreadAndRecoilStateInformation)
+{
+	const FWeaponRecoil &weaponRecoil = spreadAndRecoilStateInformation.WeaponRecoilInfo;
+	float currentVertical = FMath::Abs(CurrentViewPunchTotal.Y);
+	float maxVertical = FMath::Clamp(weaponRecoil.MaxTotalVertical - currentVertical, 0.0f, weaponRecoil.MaxVertical);
+	float minVertical = FMath::Min(weaponRecoil.MinVertical, maxVertical);
+	float verticalStep = FMath::FRandRange(minVertical, maxVertical);
+
+	float maxLeft = -(FMath::Abs(-weaponRecoil.MaxTotalHorizontal - CurrentViewPunchTotal.X));
+	float cappedMaxLeft = -(FMath::Min(FMath::Abs(maxLeft), weaponRecoil.MaxHorizontal));
+	float maxRight = (FMath::Min(FMath::Abs(weaponRecoil.MaxTotalHorizontal - CurrentViewPunchTotal.X), weaponRecoil.MaxHorizontal));
+	float horizontalStep = FMath::FRandRange(cappedMaxLeft, maxRight);
+
+	FVector2D viewPunch(horizontalStep, -verticalStep);
+	return viewPunch;
 }
 
 

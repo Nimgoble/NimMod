@@ -68,6 +68,7 @@ ANimModCharacter::ANimModCharacter(const FObjectInitializer& ObjectInitializer)
 	MoveComp->JumpZVelocity = 620;
 	MoveComp->bCanWalkOffLedgesWhenCrouching = true;
 	MoveComp->MaxWalkSpeedCrouched = 200;
+	MoveComp->AirControl = 1;
 
 	/* Ignore this channel or it will absorb the trace impacts instead of the skeletal mesh */
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
@@ -147,6 +148,17 @@ void ANimModCharacter::PossessedBy(class AController* InController)
 
 	// [server] as soon as PlayerState is assigned, set team colors of this pawn for local player
 	UpdateTeamColorsAllMIDs();
+
+	UCharacterMovementComponent *MoveComp = GetCharacterMovement();
+	ANimModPlayerController *NimModController = GetNimModPlayerController();
+	if (MoveComp && NimModController)
+	{
+		ANimModTeam *ourTeam = NimModController->GetPlayerTeam();
+		if (ourTeam)
+		{
+			MoveComp->MaxWalkSpeed = ourTeam->TeamInfo.MaxSpeed;
+		}
+	}
 }
 
 void ANimModCharacter::OnRep_PlayerState()
@@ -193,6 +205,33 @@ void ANimModCharacter::SetPlayerDefaults()
 class ANimModPlayerController *ANimModCharacter::GetNimModPlayerController()
 {
 	return Cast<ANimModPlayerController>(Controller);
+}
+
+//Custom override that removes the "crouched" checks.
+bool ANimModCharacter::CanJumpInternal_Implementation() const
+{
+	const bool bCanHoldToJumpHigher = (GetJumpMaxHoldTime() > 0.0f) && IsJumpProvidingForce();
+	return CharacterMovement && (CharacterMovement->IsMovingOnGround() || bCanHoldToJumpHigher) && CharacterMovement->IsJumpAllowed();
+}
+
+void ANimModCharacter::Falling()
+{
+	StartingFallHeight = GetActorLocation().Z;
+}
+
+void ANimModCharacter::Landed(const FHitResult& Hit)
+{
+	if (Hit.bBlockingHit)
+	{
+		float fallDistance = StartingFallHeight - GetActorLocation().Z;
+		if (fallDistance > 75)
+		{
+			//Apply fall damage?
+			int i = 0;
+		}
+	}
+
+	Super::Landed(Hit);
 }
 
 FRotator ANimModCharacter::GetAimOffsets() const
@@ -257,9 +296,10 @@ void ANimModCharacter::UpdateTeamColors(UMaterialInstanceDynamic* UseMID)
 	}
 }
 
-void ANimModCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
+void ANimModCharacter::OnCameraUpdate(const FVector& PreviousCameraLocation, const FVector& CameraLocation, const FRotator& CameraRotation)
 {
 	USkeletalMeshComponent* DefMesh1P = Cast<USkeletalMeshComponent>(GetClass()->GetDefaultSubobjectByName(TEXT("PawnMesh1P")));
+	//USkeletalMeshComponent* DefMesh1P = Mesh1P;
 	const FMatrix DefMeshLS = FRotationTranslationMatrix(DefMesh1P->RelativeRotation, DefMesh1P->RelativeLocation);
 	const FMatrix LocalToWorld = ActorToWorld().ToMatrixWithScale();
 
@@ -273,13 +313,19 @@ void ANimModCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRota
 	const FMatrix MeshRelativeToCamera = DefMeshLS * LeveledCameraLS.Inverse();
 	const FMatrix PitchedMesh = MeshRelativeToCamera * PitchedCameraLS;
 
-	FVector origin = PitchedMesh.GetOrigin();
-	if (bIsCrouched)
-	{
-		origin.Z = (origin.Z - (DefaultBaseEyeHeight - DefMesh1P->RelativeLocation.Z));
-	}
+	//FVector origin = PitchedMesh.GetOrigin();
+	FVector origin = Mesh1P->GetRelativeTransform().GetLocation();
+	//FVector originalLocation = Mesh1P->GetRelativeTransform().GetLocation();
+	////FVector origin = Mesh1P->ComponentToWorld.GetLocation();
+	//if (bIsCrouched)
+	//{
+	//	//origin.Z = (origin.Z - (DefaultBaseEyeHeight - DefMesh1P->RelativeLocation.Z));
+	//	origin.Z = (PreviousCameraLocation.Z - CameraLocation.Z);
+	//}
 
-	Mesh1P->SetRelativeLocationAndRotation(origin, PitchedMesh.Rotator());
+	Mesh1P->SetRelativeLocationAndRotation(origin, PitchedMesh.Rotator(), false, nullptr, ETeleportType::TeleportPhysics);
+	/*FVector newLocation = Mesh1P->GetRelativeTransform().GetLocation();
+	int i = -1;*/
 }
 
 
@@ -808,6 +854,7 @@ void ANimModCharacter::StartPrimaryWeaponFire()
 	if (!bWantsToFire)
 	{
 		bWantsToFire = true;
+		PreviousViewPunchStep = FVector2D::ZeroVector;
 		if (CurrentWeapon)
 		{
 			CurrentWeapon->StartPrimaryFire();
@@ -821,6 +868,7 @@ void ANimModCharacter::StopPrimaryWeaponFire()
 	if (bWantsToFire)
 	{
 		bWantsToFire = false;
+		PreviousViewPunchStep = TotalViewPunch;
 		if (CurrentWeapon)
 		{
 			CurrentWeapon->StopPrimaryFire();
@@ -862,6 +910,17 @@ bool ANimModCharacter::CanFire() const
 bool ANimModCharacter::CanReload() const
 {
 	return true;
+}
+
+void ANimModCharacter::AddViewPunch(FVector2D punch)
+{
+	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	if (MyPC)
+	{
+		MyPC->AddPitchInput(punch.Y);
+		MyPC->AddYawInput(punch.X);
+		TotalViewPunch += punch;
+	}
 }
 
 void ANimModCharacter::SetTargeting(bool bNewTargeting)
@@ -1321,6 +1380,27 @@ void ANimModCharacter::OnStopRunning()
 	SetRunning(false, false);
 }
 
+void ANimModCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	//FVector origin = Mesh1P->ComponentToWorld.GetLocation();
+	FTransform currentTransform = Mesh1P->GetRelativeTransform();
+	FVector origin = currentTransform.GetLocation();
+	origin.Z -= (DefaultBaseEyeHeight - CrouchedEyeHeight);// HalfHeightAdjust;
+	FRotator rotation = currentTransform.GetRotation().Rotator();
+	Mesh1P->SetRelativeLocationAndRotation(origin, rotation, false, nullptr, ETeleportType::TeleportPhysics);
+}
+
+void ANimModCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	FTransform currentTransform = Mesh1P->GetRelativeTransform();
+	FVector origin = currentTransform.GetLocation();
+	origin.Z += (DefaultBaseEyeHeight - CrouchedEyeHeight);// HalfHeightAdjust; //This is different than the one passed in in OnStartCrouch...
+	FRotator rotation = currentTransform.GetRotation().Rotator();
+	Mesh1P->SetRelativeLocationAndRotation(origin, rotation, false, nullptr, ETeleportType::TeleportPhysics);
+}
+
 void ANimModCharacter::OnCrouch()
 {
 	if (CanCrouch())
@@ -1332,6 +1412,49 @@ void ANimModCharacter::OnUnCrouch()
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
 	if (MoveComp && MoveComp->IsCrouching())
 		UnCrouch();
+}
+
+bool ANimModCharacter::IsCrouched() const
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (MoveComp)
+		return MoveComp->IsCrouching();
+
+	return bIsCrouched;
+}
+
+bool ANimModCharacter::IsMoving() const
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (MoveComp)
+	{
+		FVector velocity = GetVelocity();
+		return MoveComp->IsMovingOnGround() && (velocity.X > 0 || velocity.Y > 0);
+	}
+
+	return false;
+}
+
+bool ANimModCharacter::IsJumping() const
+{
+	if (!GetCharacterMovement())
+		return false;
+
+	return GetVelocity().Z > 0;
+}
+
+bool ANimModCharacter::IsFalling() const
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (MoveComp)
+		MoveComp->IsFalling();
+
+	return false;
+}
+
+bool ANimModCharacter::IsInAir() const
+{
+	return IsFalling() || IsJumping();
 }
 
 bool ANimModCharacter::IsRunning() const
@@ -1364,6 +1487,17 @@ void ANimModCharacter::Tick(float DeltaSeconds)
 				{
 					Health = this->GetMaxHealth();
 				}
+			}
+		}
+
+		if (!bWantsToFire)
+		{
+			if (PreviousViewPunchStep != FVector2D::ZeroVector /*&& CurrentViewPunchLERPCount < 10*/)
+			{
+				FVector2D nextViewPunchStep = FMath::Vector2DInterpConstantTo(PreviousViewPunchStep, FVector2D::ZeroVector, DeltaSeconds, 5.0f);
+				FVector2D deltaStep = (PreviousViewPunchStep - nextViewPunchStep);
+				AddViewPunch(-deltaStep);
+				PreviousViewPunchStep = nextViewPunchStep;
 			}
 		}
 		

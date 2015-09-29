@@ -8,6 +8,14 @@
 #include "NimModHUD.h"
 #include "Particles/ParticleSystemComponent.h"
 
+static TAutoConsoleVariable<int32> CVarDebugTraceShots
+(
+	TEXT("nimmod.DebugTraceShots"),
+	0,
+	TEXT("When enabled, will draw tracelines for weapon shots."),
+	ECVF_Cheat
+);
+
 ANimModWeapon::ANimModWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
@@ -807,6 +815,11 @@ FHitResult ANimModWeapon::WeaponTrace(const FVector& StartTrace, const FVector& 
 {
 	static FName WeaponFireTag = FName(TEXT("WeaponTrace"));
 
+	int32 shouldDrawTrace = CVarDebugTraceShots.GetValueOnGameThread();
+	if (shouldDrawTrace == 1)
+	{
+		GetWorld()->DebugDrawTraceTag = WeaponFireTag;
+	}
 	// Perform trace to retrieve hit info
 	FCollisionQueryParams TraceParams(WeaponFireTag, true, Instigator);
 	TraceParams.bTraceAsyncScene = true;

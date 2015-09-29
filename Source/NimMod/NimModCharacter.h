@@ -39,13 +39,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "NimMod|Character")
 	class ANimModPlayerController *GetNimModPlayerController();
 
+	virtual bool CanJumpInternal_Implementation() const;
+
+	virtual void Falling();
+	virtual void Landed(const FHitResult& Hit);
+
 	/**
 	* Add camera pitch to first person mesh.
 	*
 	*	@param	CameraLocation	Location of the Camera.
 	*	@param	CameraRotation	Rotation of the Camera.
 	*/
-	void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
+	void OnCameraUpdate(const FVector& PreviousCameraLocation, const FVector& CameraLocation, const FRotator& CameraRotation);
 
 	/** get aim offsets */
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
@@ -109,6 +114,8 @@ public:
 
 	/** check if pawn can reload weapon */
 	bool CanReload() const;
+
+	void AddViewPunch(FVector2D punch);
 
 	/** [server + local] change targeting state */
 	void SetTargeting(bool bNewTargeting);
@@ -210,9 +217,33 @@ public:
 	/** player released run action */
 	void OnStopRunning();
 
+	/**
+	* Called when Character crouches. Called on non-owned Characters through bIsCrouched replication.
+	* @param	HalfHeightAdjust		difference between default collision half-height, and actual crouched capsule half-height.
+	* @param	ScaledHalfHeightAdjust	difference after component scale is taken in to account.
+	*/
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+	/**
+	* Called when Character stops crouching. Called on non-owned Characters through bIsCrouched replication.
+	* @param	HalfHeightAdjust		difference between default collision half-height, and actual crouched capsule half-height.
+	* @param	ScaledHalfHeightAdjust	difference after component scale is taken in to account.
+	*/
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
 	void OnCrouch();
 
 	void OnUnCrouch();
+
+	bool IsCrouched() const;
+
+	bool IsMoving() const;
+
+	bool IsJumping() const;
+
+	bool IsFalling() const;
+
+	bool IsInAir() const;
 
 	void UseSlot(int32 slot);
 
@@ -299,6 +330,15 @@ public:
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* CharacterCameraComponent;*/
 private:
+
+	UPROPERTY(transient)
+	float StartingFallHeight;
+
+	UPROPERTY(transient)
+	FVector2D PreviousViewPunchStep;
+
+	UPROPERTY(transient)
+	FVector2D TotalViewPunch;
 
 	/** pawn mesh: 1st person view */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)

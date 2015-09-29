@@ -21,25 +21,96 @@ struct FInstantHitInfo
 };
 
 USTRUCT()
+struct FWeaponSpread
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category="Weapon|Spread")
+	float Min;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Spread")
+	float Max;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Spread")
+	float MaxTotal;
+};
+
+USTRUCT()
+struct FWeaponRecoil
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MinHorizontal;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MaxHorizontal;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MaxTotalHorizontal;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MinVertical;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MaxVertical;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	float MaxTotalVertical;
+};
+
+USTRUCT()
+struct FWeaponSpreadAndRecoilState
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Spread")
+	FWeaponSpread WeaponSpreadInfo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil")
+	FWeaponRecoil WeaponRecoilInfo;
+};
+
+USTRUCT()
+struct FWeaponSpreadAndRecoilStates
+{
+	GENERATED_USTRUCT_BODY()
+
+	//Standing still
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FWeaponSpreadAndRecoilState StandingStillInfo;
+	//Moving
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FWeaponSpreadAndRecoilState MovingInfo;
+	//Crouching
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FWeaponSpreadAndRecoilState CrouchingInfo;
+	//Jumping/Falling
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FWeaponSpreadAndRecoilState InAirInfo;
+};
+
+USTRUCT()
 struct FInstantWeaponData
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	int32 NumberOfBulletsPerShot;
+
 	/** base weapon spread (degrees) */
-	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float WeaponSpread;
+	/*UPROPERTY(EditDefaultsOnly, Category = Accuracy)
+	float WeaponSpread;*/
 
 	/** targeting spread modifier */
-	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float TargetingSpreadMod;
+	/*UPROPERTY(EditDefaultsOnly, Category = Accuracy)
+	float TargetingSpreadMod;*/
 
 	/** continuous firing: spread increment */
-	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float FiringSpreadIncrement;
+	//UPROPERTY(EditDefaultsOnly, Category = Accuracy)
+	//float FiringSpreadIncrement;
 
-	/** continuous firing: max increment */
-	UPROPERTY(EditDefaultsOnly, Category = Accuracy)
-	float FiringSpreadMax;
+	///** continuous firing: max increment */
+	//UPROPERTY(EditDefaultsOnly, Category = Accuracy)
+	//float FiringSpreadMax;
+
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	FWeaponSpreadAndRecoilStates SpreadAndRecoilStates;
 
 	/** weapon range */
 	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
@@ -64,10 +135,10 @@ struct FInstantWeaponData
 	/** defaults */
 	FInstantWeaponData()
 	{
-		WeaponSpread = 5.0f;
+		/*WeaponSpread = 5.0f;
 		TargetingSpreadMod = 0.25f;
 		FiringSpreadIncrement = 1.0f;
-		FiringSpreadMax = 10.0f;
+		FiringSpreadMax = 10.0f;*/
 		WeaponRange = 10000.0f;
 		HitDamage = 10;
 		DamageType = UDamageType::StaticClass();
@@ -85,7 +156,14 @@ class NIMMOD_API ANimModWeapon_Instant : public ANimModWeapon
 	GENERATED_BODY()
 
 	/** get current spread */
-	float GetCurrentSpread() const;
+	float GetCurrentSpread(const FWeaponSpreadAndRecoilState &spreadAndRecoilStateInformation);
+
+	const FWeaponSpreadAndRecoilState& GetCurrentRecoilAndSpreadState();
+
+	FVector2D CalculateNextViewPunch(const FWeaponSpreadAndRecoilState &spreadAndRecoilStateInformation);
+
+	UPROPERTY(transient)
+	FVector2D CurrentViewPunchTotal;
 
 public:
 	ANimModWeapon_Instant(const FObjectInitializer& ObjectInitializer);

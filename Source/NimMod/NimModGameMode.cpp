@@ -710,9 +710,16 @@ bool ANimModGameMode::ShouldActorTravel(AActor *Actor)
 /** Does end of game handling for the online layer */
 void ANimModGameMode::RestartPlayer(class AController* NewPlayer)
 {
+	ANimModPlayerController *NimModNewPlayer = (ANimModPlayerController *)NewPlayer;
 	if (NewPlayer == NULL || NewPlayer->IsPendingKillPending())
 	{
 		return;
+	}
+
+	if (NimModNewPlayer != NULL)
+	{
+		if (NimModNewPlayer->GetPlayerTeamNumber() == ENimModTeam::SPECTATORS)
+			return;
 	}
 
 	UE_LOG(LogNimMod, Verbose, TEXT("RestartPlayer %s"), (NewPlayer && NewPlayer->PlayerState) ? *NewPlayer->PlayerState->PlayerName : TEXT("Unknown"));

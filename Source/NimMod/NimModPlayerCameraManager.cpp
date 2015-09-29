@@ -22,11 +22,13 @@ void ANimModPlayerCameraManager::UpdateCamera(float DeltaTime)
 		DefaultFOV = CurrentFOV;//FMath::FInterpTo(DefaultFOV, TargetFOV, DeltaTime, 20.0f);
 	}
 
+	FVector previousLocation = GetCameraLocation();
+
 	Super::UpdateCamera(DeltaTime);
 
 	if (MyPawn && MyPawn->IsFirstPerson())
 	{
-		MyPawn->OnCameraUpdate(GetCameraLocation(), GetCameraRotation());
+		MyPawn->OnCameraUpdate(previousLocation, GetCameraLocation(), GetCameraRotation());
 	}
 }
 
