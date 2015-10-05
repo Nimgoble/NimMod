@@ -170,6 +170,42 @@ struct FNimModHUDMessage
 	}
 };
 
+USTRUCT()
+struct FProjectileWeaponData
+{
+	GENERATED_USTRUCT_BODY()
+
+	/** projectile class */
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	TSubclassOf<class ANimModProjectile> ProjectileClass;
+
+	/** life time */
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	float ProjectileLife;
+
+	/** damage at impact point */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	int32 ExplosionDamage;
+
+	/** radius of damage */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	float ExplosionRadius;
+
+	/** type of damage */
+	UPROPERTY(EditDefaultsOnly, Category = WeaponStat)
+	TSubclassOf<UDamageType> DamageType;
+
+	/** defaults */
+	FProjectileWeaponData()
+	{
+		ProjectileClass = NULL;
+		ProjectileLife = 10.0f;
+		ExplosionDamage = 100;
+		ExplosionRadius = 300.0f;
+		DamageType = UDamageType::StaticClass();
+	}
+};
+
 #define NIMMOD_SURFACE_Default		SurfaceType_Default
 #define NIMMOD_SURFACE_Concrete	SurfaceType1
 #define NIMMOD_SURFACE_Dirt		SurfaceType2

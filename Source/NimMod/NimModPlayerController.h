@@ -1,5 +1,7 @@
 // Copyright 1998-2015 Epic Games, Inc. All Rights Reserved.
 
+#pragma once
+
 #include "NimMod.h"
 #include "Runtime/Online/OnlineSubsystem/Public/Online.h"
 #include "NimModHUD.h"
