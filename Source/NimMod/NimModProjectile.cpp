@@ -104,12 +104,15 @@ void ANimModProjectile::Explode(const FHitResult& Impact)
 
 	if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
 	{
-		UGameplayStatics::ApplyRadialDamage
+		UGameplayStatics::ApplyRadialDamageWithFalloff
 		(
-			this, 
+			this,
 			WeaponConfig.ExplosionDamage, 
+			5.0f,
 			NudgedImpactLocation, 
+			0.0f,
 			WeaponConfig.ExplosionRadius, 
+			1.0f,
 			WeaponConfig.DamageType, 
 			TArray<AActor*>(), 
 			this, 

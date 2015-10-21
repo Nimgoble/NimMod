@@ -466,6 +466,10 @@ float ANimModGameMode::ModifyDamage(float Damage, AActor* DamagedActor, struct F
 
 bool ANimModGameMode::CanDealDamage(class ANimModPlayerState* DamageInstigator, class ANimModPlayerState* DamagedPlayer) const
 {
+	//You can hurt yourself.
+	if (DamageInstigator == DamagedPlayer)
+		return true;
+
 	ENimModTeam instigatorTeam = DamageInstigator->GetTeam();
 	ENimModTeam damagedTeam = DamagedPlayer->GetTeam();
 
