@@ -367,9 +367,9 @@ float ANimModCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dama
 		return 0.f;
 	}
 
-	if (Health <= 0.f)
+	if (Health <= 0)
 	{
-		return 0.f;
+		return 0;
 	}
 
 	// Modify based on game rules.
@@ -379,7 +379,7 @@ float ANimModCharacter::TakeDamage(float Damage, struct FDamageEvent const& Dama
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.f)
 	{
-		Health -= ActualDamage;
+		Health -= (int)ActualDamage;
 		if (Health <= 0)
 		{
 			Die(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
@@ -418,7 +418,7 @@ bool ANimModCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent,
 		return false;
 	}
 
-	Health = FMath::Min(0.0f, Health);
+	Health = FMath::Min(0, Health);
 
 	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
 	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
