@@ -30,6 +30,7 @@ public:
 	void HandleHUDMessage(const FNimModHUDMessage &message);
 	void HandleToggleChat(bool isTeamChat);
 	void HandleRoundRestarting();
+	void HandleHit(float damageTaken, FDamageEvent const& DamageEvent, APawn* PawnInstigator);
 
 	//class UNimModHUDLayoutWidget *GetLayoutWidget();
 

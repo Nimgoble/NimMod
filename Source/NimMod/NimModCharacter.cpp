@@ -138,7 +138,9 @@ void ANimModCharacter::PawnClientRestart()
 	SetCurrentWeapon(CurrentWeapon);
 
 	// set team colors for 1st person view
-	UMaterialInstanceDynamic* Mesh1PMID = Mesh1P->CreateAndSetMaterialInstanceDynamic(0);
+
+	//The material's index that we want is 1, not 0.
+	UMaterialInstanceDynamic* Mesh1PMID = Mesh1P->CreateAndSetMaterialInstanceDynamic(1);
 	UpdateTeamColors(Mesh1PMID);
 }
 
@@ -288,11 +290,23 @@ void ANimModCharacter::UpdateTeamColors(UMaterialInstanceDynamic* UseMID)
 	if (UseMID)
 	{
 		ANimModPlayerState* MyPlayerState = Cast<ANimModPlayerState>(PlayerState);
-		if (MyPlayerState != NULL)
+		ANimModGameState *gameState = Cast<ANimModGameState>(GetWorld()->GetGameState());
+		if (MyPlayerState && gameState)
 		{
-			float MaterialParam = (float)MyPlayerState->GetTeam();
-			UseMID->SetScalarParameterValue(TEXT("Team Color Index"), MaterialParam);
+			ANimModTeam *ourTeam = gameState->GetTeam(MyPlayerState->GetTeam());
+			if (ourTeam)
+			{
+				UseMID->SetVectorParameterValue(TEXT("AccentColor"), ourTeam->TeamInfo.TeamColor);
+				UseMID->SetVectorParameterValue(TEXT("TextColor"), ourTeam->TeamInfo.TeamColor);
+			}	
 		}
+		//ANimModPlayerState* MyPlayerState = Cast<ANimModPlayerState>(PlayerState);
+		//if (MyPlayerState != NULL)
+		//{
+		//	float MaterialParam = (float)MyPlayerState->GetTeam();
+		//	UseMID->SetScalarParameterValue(TEXT("Team Color Index"), MaterialParam);
+		//	
+		//}
 	}
 }
 
@@ -545,13 +559,13 @@ void ANimModCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& Dam
 		ApplyDamageMomentum(DamageTaken, DamageEvent, PawnInstigator, DamageCauser);
 	}
 
-	/*ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
 	ANimModHUD* MyHUD = MyPC ? Cast<ANimModHUD>(MyPC->GetHUD()) : NULL;
 	if (MyHUD)
 	{
-		MyHUD->NotifyHit(DamageTaken, DamageEvent, PawnInstigator);
+		MyHUD->HandleHit(DamageTaken, DamageEvent, PawnInstigator);
 	}
-
+	/*
 	if (PawnInstigator && PawnInstigator != this && PawnInstigator->IsLocallyControlled())
 	{
 		ANimModPlayerController* InstigatorPC = Cast<ANimModPlayerController>(PawnInstigator->Controller);
@@ -904,7 +918,8 @@ void ANimModCharacter::StopSecondaryWeaponFire()
 
 bool ANimModCharacter::CanFire() const
 {
-	return IsAlive();
+	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	return (MyPC) ? !MyPC->IsFrozen() && IsAlive() : IsAlive();
 }
 
 bool ANimModCharacter::CanReload() const
@@ -1168,7 +1183,7 @@ void ANimModCharacter::LookUpAtRate(float Val)
 void ANimModCharacter::OnStartPrimaryFire()
 {
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
+	if (MyPC && !MyPC->IsFrozen() && MyPC->IsGameInputAllowed())
 	{
 		if (IsRunning())
 		{
@@ -1187,7 +1202,7 @@ void ANimModCharacter::OnStopPrimaryFire()
 void ANimModCharacter::OnStartSecondaryFire()
 {
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
+	if (MyPC && !MyPC->IsFrozen() && MyPC->IsGameInputAllowed())
 	{
 		if (IsRunning())
 		{
@@ -1338,7 +1353,7 @@ void ANimModCharacter::UseSlot()
 void ANimModCharacter::OnReload()
 {
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
+	if (MyPC && !MyPC->IsFrozen() && MyPC->IsGameInputAllowed())
 	{
 		if (CurrentWeapon)
 		{
@@ -1403,7 +1418,8 @@ void ANimModCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeigh
 
 void ANimModCharacter::OnCrouch()
 {
-	if (CanCrouch())
+	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
+	if (MyPC && !MyPC->IsFrozen() && CanCrouch())
 		Crouch();
 }
 
@@ -1548,7 +1564,7 @@ void ANimModCharacter::Tick(float DeltaSeconds)
 void ANimModCharacter::OnStartJump()
 {
 	ANimModPlayerController* MyPC = Cast<ANimModPlayerController>(Controller);
-	if (MyPC && MyPC->IsGameInputAllowed())
+	if (MyPC && !MyPC->IsFrozen() && MyPC->IsGameInputAllowed())
 	{
 		bPressedJump = true;
 	}

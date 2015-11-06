@@ -63,6 +63,8 @@ public:
 
 	void VIPKilled();
 
+	void VIPLeft();
+
 private:
 	UFUNCTION()
 	void OnRep_Teams(TArray<ANimModTeam *> replicatedTeams);

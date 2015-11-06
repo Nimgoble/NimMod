@@ -158,6 +158,12 @@ void ANimModGameState::VIPKilled()
 	TriggerRoundRestart();
 }
 
+void ANimModGameState::VIPLeft()
+{
+	SendClientsMessage("The VIP has left.  Restarting round...");
+	TriggerRoundRestart();
+}
+
 void ANimModGameState::TriggerRoundRestart_Implementation()
 {
 	FreezePlayers();
@@ -190,6 +196,7 @@ void ANimModGameState::OnRestartTimerExpired()
 	}
 
 	RestartRound();
+	UnfreezePlayers();
 }
 
 void ANimModGameState::SendClientsMessage(FString message)
@@ -275,8 +282,9 @@ void ANimModGameState::FreezePlayers_Implementation()
 		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
 		if (PlayerController)
 		{
-			PlayerController->SetIgnoreMoveInput(true);
-			PlayerController->SetIgnoreLookInput(true);
+			PlayerController->SetFrozen(true);
+			/*PlayerController->SetIgnoreMoveInput(true);
+			PlayerController->SetIgnoreLookInput(true);*/
 		}
 	}
 }
@@ -293,8 +301,9 @@ void ANimModGameState::UnfreezePlayers_Implementation()
 		ANimModPlayerController* PlayerController = Cast<ANimModPlayerController>(Controller);
 		if (PlayerController)
 		{
-			PlayerController->SetIgnoreMoveInput(false);
-			PlayerController->SetIgnoreLookInput(false);
+			PlayerController->SetFrozen(false);
+			/*PlayerController->SetIgnoreMoveInput(false);
+			PlayerController->SetIgnoreLookInput(false);*/
 		}
 	}
 }

@@ -31,6 +31,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "RoundRestarting"))
 	void HandleRoundRestarting();
 
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "PointDamage"))
+	void HandlePointDamage(float Damage, FVector HitLocation, FVector HitNormal, class UPrimitiveComponent* HitComponent, FName BoneName, FVector ShotFromDirection, APawn* PawnInstigator);
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "RadialDamage"))
+	void HandleRadialDamage(float Damage, FVector Origin, APawn* PawnInstigator);
+
 	UFUNCTION(BlueprintCallable, Category = "NimMod|HUD")
 	void SendChatMessage(FNimModHUDMessage chatMessage);
 

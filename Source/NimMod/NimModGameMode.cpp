@@ -363,6 +363,19 @@ void ANimModGameMode::PostLogin(APlayerController* NewPlayer)
 
 void ANimModGameMode::Logout(AController* Exiting)
 {
+	ANimModPlayerController* NewPC = Cast<ANimModPlayerController>(Exiting);
+	if (NewPC && NewPC->IsVIP())
+	{
+		if (GameState)
+		{
+			ANimModGameState *gameState = Cast<ANimModGameState>(GameState);
+			if (gameState)
+			{
+				gameState->VIPLeft();
+			}
+		}
+	}
+
 	Super::Logout(Exiting);
 	UpdateServerPlayerCount();
 }

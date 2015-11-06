@@ -249,6 +249,12 @@ public:
 
 	UNimModLocalPlayer *GetLocalPlayer();
 
+	void SetFrozen(bool frozen);
+	bool IsFrozen();
+
+	void SetIsVIP(bool vip);
+	bool IsVIP();
+
 	// end ANimModPlayerController-specific
 
 	virtual void PreClientTravel(const FString& PendingURL, ETravelType TravelType, bool bIsSeamlessTravel) override;
@@ -270,6 +276,13 @@ protected:
 	/** god mode cheat */
 	UPROPERTY(Transient, Replicated)
 	uint8 bGodMode : 1;
+
+	/** frozen? */
+	UPROPERTY(Transient, Replicated)
+	uint8 bFrozen : 1;
+
+	UPROPERTY(Transient, Replicated)
+	uint8 bIsVIP : 1;
 
 	/** if set, gameplay related actions (movement, weapn usage, etc) are allowed */
 	uint8 bAllowGameActions : 1;

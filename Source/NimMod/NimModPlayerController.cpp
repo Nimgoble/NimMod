@@ -56,6 +56,7 @@ ANimModPlayerController::ANimModPlayerController(const FObjectInitializer& Objec
 	bHasSentStartEvents = false;
 	TeamMenu = nullptr;
 	bHasHadInitialSpawn = false;
+	bFrozen = false;
 }
 
 void ANimModPlayerController::SetupInputComponent()
@@ -152,6 +153,26 @@ void ANimModPlayerController::SetPlayer(UPlayer* InPlayer)
 UNimModLocalPlayer *ANimModPlayerController::GetLocalPlayer()
 {
 	return Cast<UNimModLocalPlayer>(Player);
+}
+
+void ANimModPlayerController::SetFrozen(bool frozen)
+{
+	bFrozen = frozen;
+}
+
+bool ANimModPlayerController::IsFrozen()
+{
+	return bFrozen;
+}
+
+void ANimModPlayerController::SetIsVIP(bool vip)
+{
+	bIsVIP = vip;
+}
+
+bool ANimModPlayerController::IsVIP()
+{
+	return bIsVIP;
 }
 
 void ANimModPlayerController::QueryAchievements()
@@ -868,7 +889,7 @@ bool ANimModPlayerController::IsMoveInputIgnored() const
 	}
 	else
 	{
-		return Super::IsMoveInputIgnored();
+		return bFrozen || Super::IsMoveInputIgnored();
 	}
 }
 
@@ -880,7 +901,7 @@ bool ANimModPlayerController::IsLookInputIgnored() const
 	}
 	else
 	{
-		return Super::IsLookInputIgnored();
+		return bFrozen || Super::IsLookInputIgnored();
 	}
 }
 

@@ -93,3 +93,22 @@ void ANimModHUD::HandleRoundRestarting()
 		layoutWidget->HandleRoundRestarting();
 }
 
+void ANimModHUD::HandleHit(float damageTaken, FDamageEvent const& DamageEvent, APawn* PawnInstigator)
+{
+	if (layoutWidget != nullptr)
+	{
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			// point damage event, pass off to helper function
+			FPointDamageEvent* const PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+			layoutWidget->HandlePointDamage(damageTaken, PointDamageEvent->HitInfo.ImpactPoint, PointDamageEvent->HitInfo.ImpactNormal, PointDamageEvent->HitInfo.Component.Get(), PointDamageEvent->HitInfo.BoneName, PointDamageEvent->ShotDirection, PawnInstigator);
+		}
+		else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+		{
+			// radial damage event, pass off to helper function
+			FRadialDamageEvent* const RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+			layoutWidget->HandleRadialDamage(damageTaken, RadialDamageEvent->Origin, PawnInstigator);
+		}
+	}
+}
+
